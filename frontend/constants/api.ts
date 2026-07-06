@@ -1,0 +1,21 @@
+import { Platform } from "react-native";
+
+const API_PORT = 8000;
+
+// Android emulators can't reach the host machine via "localhost" - they route
+// host-loopback traffic through the special alias 10.0.2.2 instead. Web and
+// iOS simulators share the host's network namespace, so localhost works fine.
+const getBaseUrl = (): string => {
+  if (Platform.OS === "android") {
+    return `http://10.0.2.2:${API_PORT}`;
+  }
+  return `http://localhost:${API_PORT}`;
+};
+
+export const API_BASE_URL = getBaseUrl();
+
+export const ENDPOINTS = {
+  adventures: `${API_BASE_URL}/adventures`,
+  adventure: (id: number) => `${API_BASE_URL}/adventures/${id}`,
+  uploads: `${API_BASE_URL}/uploads/`,
+};

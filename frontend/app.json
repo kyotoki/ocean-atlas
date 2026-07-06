@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Ocean Atlas",
+    "slug": "ocean-atlas",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "oceanatlas",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B3D91"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.oceanatlas.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0B3D91"
+      },
+      "package": "com.oceanatlas.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-asset",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ocean Atlas uses your photo library so you can attach a picture to a logged dive.",
+          "cameraPermission": "Ocean Atlas uses your camera so you can take a photo to attach to a logged dive."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
