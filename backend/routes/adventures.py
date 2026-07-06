@@ -7,6 +7,7 @@ import models
 import schemas
 from auth import get_current_user_id
 from database import get_db
+from marine_weather import fetch_marine_conditions
 
 router = APIRouter(prefix="/adventures", tags=["adventures"])
 
@@ -42,7 +43,14 @@ def create_adventure(
     db: Session = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
-    db_adventure = models.Adventure(**adventure.model_dump(), user_id=user_id)
+    conditions = fetch_marine_conditions(adventure.latitude, adventure.longitude)
+    db_adventure = models.Adventure(
+        **adventure.model_dump(),
+        user_id=user_id,
+        water_temp_c=conditions["water_temp_c"] if conditions else None,
+        wave_height_m=conditions["wave_height_m"] if conditions else None,
+        tide_height_m=conditions["tide_height_m"] if conditions else None,
+    )
     db.add(db_adventure)
     db.commit()
     db.refresh(db_adventure)

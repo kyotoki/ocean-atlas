@@ -1,17 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AdventureDetailModal from "../../components/map/AdventureDetailModal";
 import DiveMapView from "../../components/map/DiveMapView";
+import MapSkeleton from "../../components/map/MapSkeleton";
+import WaveSpinner from "../../components/ui/WaveSpinner";
 import { ENDPOINTS } from "../../constants/api";
 import { Adventure } from "../../types/adventure";
 import { useAuthedFetch } from "../../utils/api";
@@ -23,6 +19,7 @@ export default function OceanMapScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedAdventure, setSelectedAdventure] = useState<Adventure | null>(null);
+  const [showConditions, setShowConditions] = useState(false);
 
   const fetchAdventures = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
@@ -59,9 +56,8 @@ export default function OceanMapScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color="#0B3D91" />
-        <Text style={styles.loadingText}>Charting your dives...</Text>
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
+        <MapSkeleton />
       </SafeAreaView>
     );
   }
@@ -89,7 +85,7 @@ export default function OceanMapScreen() {
           hitSlop={8}
         >
           {isRefreshing ? (
-            <ActivityIndicator size="small" color="#0B3D91" />
+            <WaveSpinner size="small" color="#0B3D91" />
           ) : (
             <Ionicons name="refresh" size={18} color="#0B3D91" />
           )}
@@ -97,7 +93,31 @@ export default function OceanMapScreen() {
       </View>
 
       <View style={styles.mapContainer}>
-        <DiveMapView adventures={adventures} onSelectAdventure={setSelectedAdventure} />
+        <DiveMapView
+          adventures={adventures}
+          onSelectAdventure={setSelectedAdventure}
+          showConditions={showConditions}
+        />
+
+        <Pressable
+          onPress={() => setShowConditions((prev) => !prev)}
+          hitSlop={8}
+          style={[styles.conditionsToggle, showConditions && styles.conditionsToggleActive]}
+        >
+          <Ionicons
+            name="thermometer-outline"
+            size={16}
+            color={showConditions ? "#FFFFFF" : "#0B3D5C"}
+          />
+          <Text
+            style={[
+              styles.conditionsToggleText,
+              showConditions && styles.conditionsToggleTextActive,
+            ]}
+          >
+            Conditions
+          </Text>
+        </Pressable>
 
         {adventures.length === 0 && (
           <View style={styles.emptyOverlay} pointerEvents="none">
@@ -150,6 +170,36 @@ const styles = StyleSheet.create({
   mapContainer: {
     flex: 1,
   },
+  conditionsToggle: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minHeight: 40,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    shadowColor: "#021019",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+    zIndex: 10,
+  },
+  conditionsToggleActive: {
+    backgroundColor: "#0B3D5C",
+  },
+  conditionsToggleText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0B3D5C",
+  },
+  conditionsToggleTextActive: {
+    color: "#FFFFFF",
+  },
   emptyOverlay: {
     position: "absolute",
     top: 0,
@@ -159,11 +209,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: "#5A6B87",
-    fontSize: 14,
   },
   errorTitle: {
     marginTop: 12,

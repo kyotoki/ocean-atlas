@@ -3,7 +3,6 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -17,9 +16,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import ActivityTypePicker from "../../components/log/ActivityTypePicker";
+import WaveSpinner from "../../components/ui/WaveSpinner";
 import { ENDPOINTS } from "../../constants/api";
+import { usePreferences } from "../../contexts/PreferencesContext";
+import { ActivityType } from "../../types/adventure";
 import { useAuthedFetch } from "../../utils/api";
 import { uploadPhoto } from "../../utils/uploadPhoto";
+import { depthUnitLabel, feetToMeters } from "../../utils/units";
+
+type SubmitStage = "idle" | "uploading-photo" | "saving";
 
 interface FormState {
   title: string;
@@ -29,6 +35,8 @@ interface FormState {
   max_depth_meters: string;
   duration_minutes: string;
   notes: string;
+  tank_pressure_bar: string;
+  gas_mix: string;
 }
 
 const INITIAL_FORM: FormState = {
@@ -39,15 +47,22 @@ const INITIAL_FORM: FormState = {
   max_depth_meters: "",
   duration_minutes: "",
   notes: "",
+  tank_pressure_bar: "",
+  gas_mix: "",
 };
 
 export default function LogAdventureScreen() {
   const router = useRouter();
   const authedFetch = useAuthedFetch();
+  const { unitSystem } = usePreferences();
+  const isImperial = unitSystem === "imperial";
+  const [activityType, setActivityType] = useState<ActivityType>("scuba");
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStage, setSubmitStage] = useState<SubmitStage>("idle");
+  const isSubmitting = submitStage !== "idle";
+  const isScuba = activityType === "scuba";
 
   const updateField = (field: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -113,7 +128,7 @@ export default function LogAdventureScreen() {
 
     const maxDepth = Number(form.max_depth_meters);
     if (form.max_depth_meters.trim() === "" || Number.isNaN(maxDepth) || maxDepth < 0) {
-      nextErrors.max_depth_meters = "Enter a valid depth in meters.";
+      nextErrors.max_depth_meters = `Enter a valid depth in ${depthUnitLabel(unitSystem)}.`;
     }
 
     const duration = Number(form.duration_minutes);
@@ -126,6 +141,13 @@ export default function LogAdventureScreen() {
       nextErrors.duration_minutes = "Enter a whole number of minutes.";
     }
 
+    if (isScuba && form.tank_pressure_bar.trim() !== "") {
+      const tankPressure = Number(form.tank_pressure_bar);
+      if (Number.isNaN(tankPressure) || tankPressure < 0) {
+        nextErrors.tank_pressure_bar = "Enter a valid tank pressure.";
+      }
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -135,10 +157,10 @@ export default function LogAdventureScreen() {
       return;
     }
 
-    setIsSubmitting(true);
     try {
       let photoUrl: string | null = null;
       if (photo) {
+        setSubmitStage("uploading-photo");
         try {
           photoUrl = await uploadPhoto(authedFetch, ENDPOINTS.uploads, photo);
         } catch {
@@ -146,6 +168,7 @@ export default function LogAdventureScreen() {
         }
       }
 
+      setSubmitStage("saving");
       const response = await authedFetch(ENDPOINTS.adventures, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -154,10 +177,16 @@ export default function LogAdventureScreen() {
           location_name: form.location_name.trim(),
           latitude: Number(form.latitude),
           longitude: Number(form.longitude),
-          max_depth_meters: Number(form.max_depth_meters),
+          max_depth_meters: isImperial
+            ? feetToMeters(Number(form.max_depth_meters))
+            : Number(form.max_depth_meters),
           duration_minutes: Number(form.duration_minutes),
           notes: form.notes.trim() ? form.notes.trim() : null,
           photo_url: photoUrl,
+          activity_type: activityType,
+          tank_pressure_bar:
+            isScuba && form.tank_pressure_bar.trim() ? Number(form.tank_pressure_bar) : null,
+          gas_mix: isScuba && form.gas_mix.trim() ? form.gas_mix.trim() : null,
         }),
       });
 
@@ -167,6 +196,7 @@ export default function LogAdventureScreen() {
 
       setForm(INITIAL_FORM);
       setPhoto(null);
+      setActivityType("scuba");
       Alert.alert("Adventure logged", "Your dive has been added to the Ocean Map.", [
         { text: "View Map", onPress: () => router.push("/") },
         { text: "Log Another", style: "cancel" },
@@ -177,7 +207,7 @@ export default function LogAdventureScreen() {
         err instanceof Error ? err.message : "Check that the Ocean Atlas server is running."
       );
     } finally {
-      setIsSubmitting(false);
+      setSubmitStage("idle");
     }
   };
 
@@ -192,6 +222,8 @@ export default function LogAdventureScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
+          <ActivityTypePicker value={activityType} onChange={setActivityType} />
+
           <Text style={styles.sectionLabel}>DIVE DETAILS</Text>
 
           <FormField
@@ -235,8 +267,8 @@ export default function LogAdventureScreen() {
 
           <View style={styles.row}>
             <FormField
-              label="Max Depth (m)"
-              placeholder="18"
+              label={`Max Depth (${depthUnitLabel(unitSystem)})`}
+              placeholder={isImperial ? "60" : "18"}
               value={form.max_depth_meters}
               onChangeText={(v) => updateField("max_depth_meters", v)}
               error={errors.max_depth_meters}
@@ -254,6 +286,30 @@ export default function LogAdventureScreen() {
             />
           </View>
 
+          {isScuba && (
+            <>
+              <Text style={styles.sectionLabel}>SCUBA GEAR</Text>
+              <View style={styles.row}>
+                <FormField
+                  label="Tank Pressure (bar)"
+                  placeholder="200"
+                  value={form.tank_pressure_bar}
+                  onChangeText={(v) => updateField("tank_pressure_bar", v)}
+                  error={errors.tank_pressure_bar}
+                  keyboardType="numeric"
+                  containerStyle={styles.halfField}
+                />
+                <FormField
+                  label="Gas Mix"
+                  placeholder="Air, Nitrox 32..."
+                  value={form.gas_mix}
+                  onChangeText={(v) => updateField("gas_mix", v)}
+                  containerStyle={styles.halfField}
+                />
+              </View>
+            </>
+          )}
+
           <Text style={styles.sectionLabel}>NOTES</Text>
           <FormField
             label="Notes (optional)"
@@ -268,12 +324,23 @@ export default function LogAdventureScreen() {
           {photo ? (
             <View style={styles.photoPreviewWrap}>
               <Image source={{ uri: photo.uri }} style={styles.photoPreview} />
+              {submitStage === "uploading-photo" && (
+                <View style={styles.photoUploadingOverlay}>
+                  <WaveSpinner size="small" color="#FFFFFF" />
+                  <Text style={styles.photoUploadingText}>Uploading...</Text>
+                </View>
+              )}
               <TouchableOpacity
                 style={styles.removePhotoButton}
                 onPress={() => setPhoto(null)}
                 hitSlop={8}
+                disabled={isSubmitting}
               >
-                <Ionicons name="close-circle" size={26} color="#B00020" />
+                <Ionicons
+                  name="close-circle"
+                  size={26}
+                  color={isSubmitting ? "#CBD5E1" : "#B00020"}
+                />
               </TouchableOpacity>
             </View>
           ) : (
@@ -304,7 +371,12 @@ export default function LogAdventureScreen() {
             activeOpacity={0.85}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <>
+                <WaveSpinner size="small" color="#FFFFFF" />
+                <Text style={styles.submitButtonText}>
+                  {submitStage === "uploading-photo" ? "Uploading photo..." : "Saving..."}
+                </Text>
+              </>
             ) : (
               <>
                 <Ionicons name="save-outline" size={18} color="#FFFFFF" />
@@ -448,8 +520,26 @@ const styles = StyleSheet.create({
   photoPreview: {
     width: 140,
     height: 140,
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: "#E2E8F0",
+  },
+  photoUploadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 14,
+    backgroundColor: "rgba(4, 20, 35, 0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  photoUploadingText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
   },
   removePhotoButton: {
     position: "absolute",

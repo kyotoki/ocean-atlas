@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 import models
 from database import engine, run_migrations
-from routes import adventures, uploads
+from routes import adventures, stats, uploads
 from storage import UPLOAD_ROOT
 
 models.Base.metadata.create_all(bind=engine)
@@ -26,6 +26,7 @@ app.add_middleware(
 )
 
 app.include_router(adventures.router)
+app.include_router(stats.router)
 app.include_router(uploads.router)
 # Registered after the uploads router: Starlette matches routes in
 # registration order, and a Mount matches on path prefix alone (regardless of

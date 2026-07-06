@@ -18,4 +18,7 @@ export const ENDPOINTS = {
   adventures: `${API_BASE_URL}/adventures`,
   adventure: (id: number) => `${API_BASE_URL}/adventures/${id}`,
   uploads: `${API_BASE_URL}/uploads/`,
+  stats: `${API_BASE_URL}/stats/`,
+  statsByActivity: (activityType: string) =>
+    `${API_BASE_URL}/stats/by-activity?activity_type=${activityType}`,
 };

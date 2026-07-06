@@ -33,3 +33,20 @@ def run_migrations():
         if existing_columns and "photo_url" not in existing_columns:
             conn.exec_driver_sql("ALTER TABLE adventures ADD COLUMN photo_url TEXT")
             conn.commit()
+        for column in ("water_temp_c", "wave_height_m", "tide_height_m"):
+            if existing_columns and column not in existing_columns:
+                conn.exec_driver_sql(f"ALTER TABLE adventures ADD COLUMN {column} REAL")
+                conn.commit()
+        if existing_columns and "activity_type" not in existing_columns:
+            # NOT NULL + a constant DEFAULT means existing rows are backfilled
+            # to 'scuba' automatically by SQLite as part of the ALTER itself.
+            conn.exec_driver_sql(
+                "ALTER TABLE adventures ADD COLUMN activity_type TEXT NOT NULL DEFAULT 'scuba'"
+            )
+            conn.commit()
+        if existing_columns and "tank_pressure_bar" not in existing_columns:
+            conn.exec_driver_sql("ALTER TABLE adventures ADD COLUMN tank_pressure_bar REAL")
+            conn.commit()
+        if existing_columns and "gas_mix" not in existing_columns:
+            conn.exec_driver_sql("ALTER TABLE adventures ADD COLUMN gas_mix TEXT")
+            conn.commit()

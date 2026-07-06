@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 import OceanLoadingScreen from "../components/auth/OceanLoadingScreen";
+import { PreferencesProvider } from "../contexts/PreferencesContext";
 import { tokenCache } from "../utils/tokenCache";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
@@ -21,10 +22,12 @@ export default function RootLayout() {
         <OceanLoadingScreen />
       </ClerkLoading>
       <ClerkLoaded>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-        </Stack>
+        <PreferencesProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+        </PreferencesProvider>
       </ClerkLoaded>
     </ClerkProvider>
   );
