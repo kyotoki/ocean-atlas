@@ -1,25 +1,40 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import { Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { Adventure } from "../../types/adventure";
+import { showAlert } from "../../utils/crossPlatformAlert";
 import { formatDepth, formatTemperature } from "../../utils/units";
+import PhotoCarousel from "./PhotoCarousel";
 
 interface AdventureDetailModalProps {
   adventure: Adventure | null;
   onClose: () => void;
+  onDelete: (adventure: Adventure) => void;
 }
 
-export default function AdventureDetailModal({ adventure, onClose }: AdventureDetailModalProps) {
-  const [imageFailed, setImageFailed] = useState(false);
+export default function AdventureDetailModal({
+  adventure,
+  onClose,
+  onDelete,
+}: AdventureDetailModalProps) {
   const { unitSystem } = usePreferences();
 
   if (!adventure) {
     return null;
   }
 
-  const hasPhoto = Boolean(adventure.photo_url) && !imageFailed;
+  const handleDeletePress = () => {
+    showAlert(
+      "Delete Adventure",
+      "Are you sure you want to permanently delete this adventure?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => onDelete(adventure) },
+      ]
+    );
+  };
+
   const hasNotes = Boolean(adventure.notes && adventure.notes.trim());
   const hasConditions =
     adventure.water_temp_c != null ||
@@ -31,21 +46,7 @@ export default function AdventureDetailModal({ adventure, onClose }: AdventureDe
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <View style={styles.photoWrap}>
-            {hasPhoto ? (
-              <Image
-                source={{ uri: adventure.photo_url! }}
-                style={styles.photo}
-                resizeMode="cover"
-                onError={() => setImageFailed(true)}
-              />
-            ) : (
-              <View style={[styles.photo, styles.photoPlaceholder]}>
-                <Ionicons name="image-outline" size={32} color="#94A3B8" />
-                <Text style={styles.photoPlaceholderText}>
-                  {imageFailed ? "Photo unavailable" : "No photo added"}
-                </Text>
-              </View>
-            )}
+            <PhotoCarousel photos={adventure.photos} height={180} />
             <Pressable style={styles.closeButton} onPress={onClose} hitSlop={10}>
               <Ionicons name="close" size={20} color="#FFFFFF" />
             </Pressable>
@@ -104,6 +105,11 @@ export default function AdventureDetailModal({ adventure, onClose }: AdventureDe
             <Text style={hasNotes ? styles.notes : styles.notesEmpty}>
               {hasNotes ? adventure.notes : "No notes added for this dive."}
             </Text>
+
+            <Pressable style={styles.deleteButton} onPress={handleDeletePress} hitSlop={8}>
+              <Ionicons name="trash-outline" size={15} color="#B00020" />
+              <Text style={styles.deleteButtonText}>Delete Log</Text>
+            </Pressable>
           </View>
         </Pressable>
       </Pressable>
@@ -135,20 +141,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 180,
     backgroundColor: "#E2E8F0",
-  },
-  photo: {
-    width: "100%",
-    height: "100%",
-  },
-  photoPlaceholder: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  photoPlaceholderText: {
-    fontSize: 13,
-    color: "#94A3B8",
-    fontWeight: "600",
   },
   closeButton: {
     position: "absolute",
@@ -229,5 +221,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#94A3B8",
     fontStyle: "italic",
+  },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 18,
+    paddingVertical: 10,
+  },
+  deleteButtonText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#B00020",
   },
 });

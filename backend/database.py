@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./ocean_atlas.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///./svel.db"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
@@ -49,4 +49,38 @@ def run_migrations():
             conn.commit()
         if existing_columns and "gas_mix" not in existing_columns:
             conn.exec_driver_sql("ALTER TABLE adventures ADD COLUMN gas_mix TEXT")
+            conn.commit()
+        if existing_columns and "date" not in existing_columns:
+            conn.exec_driver_sql("ALTER TABLE adventures ADD COLUMN date TEXT")
+            conn.commit()
+        if existing_columns and "created_at" not in existing_columns:
+            # SQLite's ALTER TABLE rejects a non-constant default (e.g.
+            # CURRENT_TIMESTAMP) on ADD COLUMN, so the column is added plain
+            # here and backfilled below - the closest available stand-in for
+            # existing rows' true creation date, since that was never
+            # recorded before.
+            conn.exec_driver_sql("ALTER TABLE adventures ADD COLUMN created_at TIMESTAMP")
+            conn.commit()
+        if existing_columns:
+            # Runs every time (not just when the column was just added above)
+            # so any row left over from an interrupted prior migration also
+            # gets backfilled, not only rows present the moment the column
+            # was created.
+            conn.exec_driver_sql(
+                "UPDATE adventures SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"
+            )
+            conn.commit()
+        if existing_columns:
+            # `adventure_photos` is a brand-new table, created automatically by
+            # create_all (which runs before this function) - this backfills
+            # each legacy single `photo_url` into it as that adventure's first
+            # photo. The NOT IN guard makes it idempotent across repeated runs.
+            conn.exec_driver_sql(
+                """
+                INSERT INTO adventure_photos (adventure_id, url, position)
+                SELECT id, photo_url, 0 FROM adventures
+                WHERE photo_url IS NOT NULL
+                  AND id NOT IN (SELECT adventure_id FROM adventure_photos)
+                """
+            )
             conn.commit()

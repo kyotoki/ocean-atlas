@@ -2,6 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
+import {
+  FIELD_BORDER,
+  FIELD_FILL,
+  FIELD_PADDING_HORIZONTAL,
+  FIELD_PADDING_VERTICAL,
+  FIELD_RADIUS,
+} from "../../constants/fieldStyle";
 import { ActivityType } from "../../types/adventure";
 
 const OPTIONS: { value: ActivityType; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -66,24 +73,24 @@ export default function ActivityTypePicker({ value, onChange }: ActivityTypePick
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 14,
+    marginBottom: 18,
   },
   label: {
     fontSize: 13,
     fontWeight: "600",
     color: "#344054",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   field: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#D0D9E6",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    backgroundColor: FIELD_FILL,
+    borderWidth: 1.5,
+    borderColor: FIELD_BORDER,
+    borderRadius: FIELD_RADIUS,
+    paddingHorizontal: FIELD_PADDING_HORIZONTAL,
+    paddingVertical: FIELD_PADDING_VERTICAL,
   },
   selectedIconBadge: {
     width: 26,

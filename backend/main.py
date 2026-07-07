@@ -8,14 +8,14 @@ from fastapi.staticfiles import StaticFiles
 
 import models
 from database import engine, run_migrations
-from routes import adventures, stats, uploads
+from routes import adventures, profile, stats, uploads
 from storage import UPLOAD_ROOT
 
 models.Base.metadata.create_all(bind=engine)
 run_migrations()
 UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="Ocean Atlas API", version="1.0.0")
+app = FastAPI(title="Svel API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,6 +26,7 @@ app.add_middleware(
 )
 
 app.include_router(adventures.router)
+app.include_router(profile.router)
 app.include_router(stats.router)
 app.include_router(uploads.router)
 # Registered after the uploads router: Starlette matches routes in
@@ -37,7 +38,7 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOAD_ROOT)), name="uploads")
 
 @app.get("/")
 def read_root():
-    return {"status": "ok", "service": "Ocean Atlas API"}
+    return {"status": "ok", "service": "Svel API"}
 
 
 @app.get("/health")

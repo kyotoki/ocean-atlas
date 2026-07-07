@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Ocean Atlas",
-    "slug": "ocean-atlas",
+    "name": "Svel",
+    "slug": "svel",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -38,8 +38,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Ocean Atlas uses your photo library so you can attach a picture to a logged dive.",
-          "cameraPermission": "Ocean Atlas uses your camera so you can take a photo to attach to a logged dive."
+          "photosPermission": "Svel uses your photo library so you can attach a picture to a logged dive.",
+          "cameraPermission": "Svel uses your camera so you can take a photo to attach to a logged dive."
         }
       ]
     ],

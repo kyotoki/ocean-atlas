@@ -33,7 +33,7 @@ function buildDiveIcon(badgeText?: string) {
     : "";
 
   return L.divIcon({
-    className: "ocean-atlas-dive-pin",
+    className: "svel-dive-pin",
     html: `
       <div style="display:flex;flex-direction:column;align-items:center;">
         ${badgeHtml}

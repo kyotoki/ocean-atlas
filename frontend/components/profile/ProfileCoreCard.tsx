@@ -2,18 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { CERTIFICATIONS } from "../../utils/certifications";
 import { countryCodeToFlag, COUNTRIES } from "../../utils/countries";
 import { LocalProfileFields } from "../../utils/profileStorage";
 import CountryPickerModal from "./CountryPickerModal";
-
-const CERTIFICATION_OPTIONS = [
-  "Open Water",
-  "Advanced Open Water",
-  "Rescue Diver",
-  "Divemaster",
-  "Freediver",
-  "Snorkel Master",
-];
 
 interface ProfileCoreCardProps {
   profile: LocalProfileFields;
@@ -63,12 +55,12 @@ export default function ProfileCoreCard({ profile, onUpdate }: ProfileCoreCardPr
 
       <Text style={styles.label}>CERTIFICATIONS</Text>
       <View style={styles.chipsRow}>
-        {CERTIFICATION_OPTIONS.map((name) => {
-          const selected = profile.certifications.includes(name);
+        {CERTIFICATIONS.map((cert) => {
+          const selected = profile.certifications.includes(cert.value);
           return (
             <Pressable
-              key={name}
-              onPress={() => toggleCertification(name)}
+              key={cert.value}
+              onPress={() => toggleCertification(cert.value)}
               style={[styles.chip, selected && styles.chipSelected]}
             >
               <Ionicons
@@ -76,7 +68,7 @@ export default function ProfileCoreCard({ profile, onUpdate }: ProfileCoreCardPr
                 size={13}
                 color={selected ? "#FFFFFF" : "#0B3D5C"}
               />
-              <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{name}</Text>
+              <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{cert.label}</Text>
             </Pressable>
           );
         })}
@@ -94,7 +86,7 @@ export default function ProfileCoreCard({ profile, onUpdate }: ProfileCoreCardPr
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
+    borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 14,
     padding: 16,

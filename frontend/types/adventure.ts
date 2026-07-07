@@ -3,13 +3,15 @@ export type ActivityType = "scuba" | "snorkeling";
 export interface Adventure {
   id: number;
   title: string;
+  date: string;
+  created_at: string;
   location_name: string;
   latitude: number;
   longitude: number;
   max_depth_meters: number;
   duration_minutes: number;
   notes: string | null;
-  photo_url: string | null;
+  photos: string[];
   water_temp_c: number | null;
   wave_height_m: number | null;
   tide_height_m: number | null;

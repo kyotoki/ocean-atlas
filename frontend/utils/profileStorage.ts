@@ -11,6 +11,7 @@ export interface LocalProfileFields {
   homeCountryCode: string | null;
   certifications: string[];
   gear: GearItem[];
+  photoUri: string | null;
 }
 
 export const DEFAULT_LOCAL_PROFILE: LocalProfileFields = {
@@ -18,6 +19,7 @@ export const DEFAULT_LOCAL_PROFILE: LocalProfileFields = {
   homeCountryCode: null,
   certifications: [],
   gear: [],
+  photoUri: null,
 };
 
 // Bio / home country / certifications / gear aren't part of the backend
@@ -26,7 +28,7 @@ export const DEFAULT_LOCAL_PROFILE: LocalProfileFields = {
 // backend surface. Keyed per Clerk user id so switching accounts on the same
 // device doesn't leak one user's profile into another's.
 function storageKey(userId: string): string {
-  return `ocean_atlas_profile_${userId}`;
+  return `svel_profile_${userId}`;
 }
 
 export async function loadLocalProfile(userId: string): Promise<LocalProfileFields> {

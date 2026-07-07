@@ -15,10 +15,15 @@ const getBaseUrl = (): string => {
 export const API_BASE_URL = getBaseUrl();
 
 export const ENDPOINTS = {
-  adventures: `${API_BASE_URL}/adventures`,
+  // Trailing slash matters here: the backend route is registered as "/" under
+  // the "/adventures" router prefix, so without it every request silently
+  // round-trips through a 307 redirect (FastAPI's default redirect_slashes)
+  // before reaching the real endpoint.
+  adventures: `${API_BASE_URL}/adventures/`,
   adventure: (id: number) => `${API_BASE_URL}/adventures/${id}`,
   uploads: `${API_BASE_URL}/uploads/`,
   stats: `${API_BASE_URL}/stats/`,
   statsByActivity: (activityType: string) =>
     `${API_BASE_URL}/stats/by-activity?activity_type=${activityType}`,
+  profile: `${API_BASE_URL}/profile/me`,
 };

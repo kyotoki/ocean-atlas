@@ -1,6 +1,6 @@
 import { useSignIn } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ActivityIndicator, Text, TextInput, TouchableOpacity } from "react-native";
 
 import { authStyles, PLACEHOLDER_COLOR } from "../../components/auth/authStyles";
@@ -9,6 +9,7 @@ import OceanAuthLayout from "../../components/auth/OceanAuthLayout";
 export default function SignInScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
+  const passwordInputRef = useRef<TextInput>(null);
 
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
@@ -81,6 +82,8 @@ export default function SignInScreen() {
           keyboardType="number-pad"
           value={code}
           onChangeText={setCode}
+          returnKeyType="done"
+          onSubmitEditing={onVerifyPress}
         />
 
         {error ? <Text style={authStyles.error}>{error}</Text> : null}
@@ -103,8 +106,8 @@ export default function SignInScreen() {
 
   return (
     <OceanAuthLayout
-      title="Ocean Atlas"
-      subtitle="Sign in to chart your dives"
+      title="Svel"
+      subtitle="Sign in to chart your adventure"
       footer={
         <>
           <Text style={authStyles.footerText}>Don&apos;t have an account?</Text>
@@ -123,8 +126,12 @@ export default function SignInScreen() {
         keyboardType="email-address"
         value={emailAddress}
         onChangeText={setEmailAddress}
+        returnKeyType="next"
+        blurOnSubmit={false}
+        onSubmitEditing={() => passwordInputRef.current?.focus()}
       />
       <TextInput
+        ref={passwordInputRef}
         style={authStyles.input}
         placeholder="Password"
         placeholderTextColor={PLACEHOLDER_COLOR}
@@ -132,6 +139,8 @@ export default function SignInScreen() {
         autoCapitalize="none"
         value={password}
         onChangeText={setPassword}
+        returnKeyType="go"
+        onSubmitEditing={onSignInPress}
       />
 
       {error ? <Text style={authStyles.error}>{error}</Text> : null}

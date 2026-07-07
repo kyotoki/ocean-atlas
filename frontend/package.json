@@ -1,5 +1,5 @@
 {
-  "name": "ocean-atlas-frontend",
+  "name": "svel-frontend",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "private": true,
@@ -13,9 +13,12 @@
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.31",
     "@expo/vector-icons": "~14.0.4",
+    "@react-native-community/datetimepicker": "^8.2.0",
     "@react-navigation/native": "^7.0.14",
     "expo": "~52.0.11",
     "expo-asset": "~11.0.5",
+    "expo-auth-session": "~6.0.3",
+    "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.3",
     "expo-font": "~13.0.4",
     "expo-image-picker": "~16.0.6",
@@ -27,6 +30,7 @@
     "expo-splash-screen": "~0.29.13",
     "expo-status-bar": "~2.0.0",
     "expo-system-ui": "~4.0.4",
+    "expo-web-browser": "~14.0.2",
     "leaflet": "^1.9.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",

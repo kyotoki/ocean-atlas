@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class AdventureBase(BaseModel):
@@ -11,14 +12,44 @@ class AdventureBase(BaseModel):
     max_depth_meters: float = Field(..., ge=0)
     duration_minutes: int = Field(..., ge=0)
     notes: Optional[str] = None
-    photo_url: Optional[str] = None
+    # A list of already-uploaded photo URLs (each obtained beforehand via a
+    # separate POST /uploads/ call per file). On the response side, the
+    # `from_attributes` ORM object exposes this as a list of AdventurePhoto
+    # rows rather than plain strings, so the before-validator below flattens
+    # either shape down to a list of URL strings.
+    photos: list[str] = Field(default_factory=list)
     activity_type: Literal["scuba", "snorkeling"] = "scuba"
     tank_pressure_bar: Optional[float] = Field(None, ge=0)
     gas_mix: Optional[str] = Field(None, max_length=50)
 
+    @field_validator("tank_pressure_bar", "gas_mix", mode="before")
+    @classmethod
+    def blank_to_none(cls, value):
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
+
+    @field_validator("photos", mode="before")
+    @classmethod
+    def flatten_photo_urls(cls, value):
+        if value is None:
+            return []
+        return [item.url if hasattr(item, "url") else item for item in value]
+
 
 class AdventureCreate(AdventureBase):
-    pass
+    # Defaults to today so direct API callers that omit it still get a sane
+    # value - the frontend always sends its own explicitly selected date.
+    date: str = Field(default_factory=lambda: datetime.utcnow().date().isoformat())
+
+    @field_validator("date")
+    @classmethod
+    def validate_date_format(cls, value: str) -> str:
+        try:
+            datetime.strptime(value, "%Y-%m-%d")
+        except ValueError as exc:
+            raise ValueError("date must be formatted as YYYY-MM-DD") from exc
+        return value
 
 
 class Adventure(AdventureBase):
@@ -26,9 +57,20 @@ class Adventure(AdventureBase):
 
     id: int
     user_id: str
+    # Nullable here (unlike AdventureCreate) since rows written before this
+    # column existed have no value - fallback_date_to_created_at backfills a
+    # display value for those instead of leaving it None.
+    date: Optional[str] = None
+    created_at: datetime
     water_temp_c: Optional[float] = None
     wave_height_m: Optional[float] = None
     tide_height_m: Optional[float] = None
+
+    @model_validator(mode="after")
+    def fallback_date_to_created_at(self):
+        if not self.date:
+            self.date = self.created_at.date().isoformat()
+        return self
 
 
 class DiveStats(BaseModel):
@@ -46,3 +88,28 @@ class ActivityStats(BaseModel):
     deepest_meters: Optional[float] = None
     average_bottom_time_minutes: Optional[float] = None
     favorite_site: Optional[str] = None
+
+
+class UserProfileBase(BaseModel):
+    first_name: str = Field(..., min_length=1, max_length=100)
+    last_name: str = Field(..., min_length=1, max_length=100)
+    nickname: Optional[str] = Field(None, max_length=100)
+    country_code: Optional[str] = Field(None, max_length=2)
+    photo_url: Optional[str] = None
+
+    @field_validator("nickname", "country_code", "photo_url", mode="before")
+    @classmethod
+    def blank_to_none(cls, value):
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
+
+
+class UserProfileCreate(UserProfileBase):
+    pass
+
+
+class UserProfile(UserProfileBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    user_id: str

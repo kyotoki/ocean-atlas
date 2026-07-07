@@ -15,7 +15,7 @@ const DEFAULT_PREFERENCES: PreferencesState = {
   mapStyle: "standard",
 };
 
-const STORAGE_KEY = "ocean_atlas_preferences";
+const STORAGE_KEY = "svel_preferences";
 
 interface PreferencesContextValue extends PreferencesState {
   setUnitSystem: (unitSystem: UnitSystem) => void;

@@ -2,28 +2,50 @@ import { Ionicons } from "@expo/vector-icons";
 import { useClerk, useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "@react-navigation/native";
 import Constants from "expo-constants";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Image,
+  LayoutAnimation,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  UIManager,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AdventureDetailModal from "../../components/map/AdventureDetailModal";
 import DiveMapView from "../../components/map/DiveMapView";
 import AccordionSection from "../../components/profile/AccordionSection";
+import AchievementBadge from "../../components/profile/AchievementBadge";
+import AchievementDetailModal from "../../components/profile/AchievementDetailModal";
+import CertificationsModal from "../../components/profile/CertificationsModal";
 import EditProfileModal from "../../components/profile/EditProfileModal";
 import GearManagerModal from "../../components/profile/GearManagerModal";
 import MapStylePickerModal from "../../components/profile/MapStylePickerModal";
 import PrivacyControlsModal from "../../components/profile/PrivacyControlsModal";
 import ProfileCoreCard from "../../components/profile/ProfileCoreCard";
 import SegmentedControl from "../../components/profile/SegmentedControl";
+import SettingsCogButton from "../../components/profile/SettingsCogButton";
+import SettingsMenuModal from "../../components/profile/SettingsMenuModal";
+import SvelProModal from "../../components/profile/SvelProModal";
 import SettingsRow from "../../components/profile/SettingsRow";
 import StatCard from "../../components/profile/StatCard";
 import WaveSpinner from "../../components/ui/WaveSpinner";
 import { ENDPOINTS } from "../../constants/api";
+import { TAB_BAR_HEIGHT } from "../../constants/layout";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { ActivityStats, ActivityType, Adventure } from "../../types/adventure";
+import { Achievement, buildAchievements } from "../../utils/achievements";
 import { useAuthedFetch } from "../../utils/api";
+import { CERTIFICATIONS } from "../../utils/certifications";
+import { countryCodeToFlag, COUNTRIES } from "../../utils/countries";
+import { showAlert } from "../../utils/crossPlatformAlert";
 import {
   DEFAULT_LOCAL_PROFILE,
   loadLocalProfile,
@@ -31,18 +53,6 @@ import {
   saveLocalProfile,
 } from "../../utils/profileStorage";
 import { formatDepth } from "../../utils/units";
-
-const ACHIEVEMENTS = [
-  { name: "Night Owl", icon: "moon-outline" as const },
-  { name: "Deep Diver", icon: "arrow-down-circle-outline" as const },
-  { name: "Snorkel Squad", icon: "people-outline" as const },
-  { name: "Century Club", icon: "trophy-outline" as const },
-];
-
-const UNIT_SYSTEM_OPTIONS = [
-  { value: "metric" as const, label: "Metric" },
-  { value: "imperial" as const, label: "Imperial" },
-];
 
 const MAP_STYLE_LABELS = {
   standard: "Standard",
@@ -54,10 +64,21 @@ function formatHours(totalMinutes: number): string {
   return `${(totalMinutes / 60).toFixed(1)} hrs`;
 }
 
+function formatSnorkelDuration(totalMinutes: number): string {
+  return `${(totalMinutes / 60).toFixed(1)} Hours`;
+}
+
 const ACTIVITY_TAB_OPTIONS: { value: ActivityType; label: string }[] = [
   { value: "scuba", label: "Scuba" },
   { value: "snorkeling", label: "Snorkeling" },
 ];
+
+// LayoutAnimation is opt-in on Android; iOS and web (a documented no-op there
+// - RN Web's UIManager.configureNextLayoutAnimation just resolves its
+// callback immediately) don't need this.
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export default function ProfileScreen() {
   const { user } = useUser();
@@ -82,6 +103,10 @@ export default function ProfileScreen() {
   const [isEditProfileVisible, setIsEditProfileVisible] = useState(false);
   const [isPrivacyModalVisible, setIsPrivacyModalVisible] = useState(false);
   const [isMapStylePickerVisible, setIsMapStylePickerVisible] = useState(false);
+  const [isSettingsMenuVisible, setIsSettingsMenuVisible] = useState(false);
+  const [isSvelProModalVisible, setIsSvelProModalVisible] = useState(false);
+  const [isCertificationsModalVisible, setIsCertificationsModalVisible] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
 
   useEffect(() => {
     if (!user?.id) {
@@ -112,6 +137,27 @@ export default function ProfileScreen() {
     [user?.id]
   );
 
+  const toggleCertification = useCallback(
+    (value: string) => {
+      setLocalProfile((prev) => {
+        const nextCertifications = prev.certifications.includes(value)
+          ? prev.certifications.filter((c) => c !== value)
+          : [...prev.certifications, value];
+        const next = { ...prev, certifications: nextCertifications };
+        if (user?.id) {
+          saveLocalProfile(user.id, next);
+        }
+        return next;
+      });
+    },
+    [user?.id]
+  );
+
+  const achievements = useMemo(
+    () => buildAchievements(adventures, localProfile.gear, localProfile.certifications),
+    [adventures, localProfile.gear, localProfile.certifications]
+  );
+
   const fetchProfileData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -131,7 +177,7 @@ export default function ProfileScreen() {
       setSnorkelingStats(await snorkelingResponse.json());
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to reach the Ocean Atlas server."
+        err instanceof Error ? err.message : "Unable to reach the Svel server."
       );
     } finally {
       setIsLoading(false);
@@ -144,49 +190,147 @@ export default function ProfileScreen() {
     }, [fetchProfileData])
   );
 
+  const handleDeleteAdventure = async (adventure: Adventure) => {
+    try {
+      const response = await authedFetch(ENDPOINTS.adventure(adventure.id), {
+        method: "DELETE",
+      });
+      if (!response.ok && response.status !== 204) {
+        throw new Error(`Server responded with status ${response.status}`);
+      }
+      setAdventures((prev) => prev.filter((a) => a.id !== adventure.id));
+      setSelectedAdventure(null);
+    } catch (err) {
+      showAlert(
+        "Unable to delete adventure",
+        err instanceof Error ? err.message : "Check that the Svel server is running."
+      );
+    }
+  };
+
+  const handleAvatarPress = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      showAlert(
+        "Photo library access needed",
+        "Enable photo library access in Settings to change your profile photo."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      updateLocalProfile({ photoUri: result.assets[0].uri });
+    }
+  };
+
   const handleLogOut = () => {
-    Alert.alert("Log Out", "Are you sure you want to log out?", [
+    showAlert("Log Out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Log Out",
         style: "destructive",
-        onPress: () => signOut(),
+        onPress: () => {
+          setIsSettingsMenuVisible(false);
+          setLocalProfile(DEFAULT_LOCAL_PROFILE);
+          setIsProfileLoaded(false);
+          setAdventures([]);
+          setScubaStats(null);
+          setSnorkelingStats(null);
+          signOut();
+        },
       },
     ]);
   };
 
+  const openEditProfile = () => {
+    setIsSettingsMenuVisible(false);
+    setIsEditProfileVisible(true);
+  };
+
+  const openGearManager = () => {
+    setIsSettingsMenuVisible(false);
+    setIsGearModalVisible(true);
+  };
+
+  const openPrivacyControls = () => {
+    setIsSettingsMenuVisible(false);
+    setIsPrivacyModalVisible(true);
+  };
+
+  const openMapStylePicker = () => {
+    setIsSettingsMenuVisible(false);
+    setIsMapStylePickerVisible(true);
+  };
+
+  const openSvelPro = () => {
+    setIsSettingsMenuVisible(false);
+    setIsSvelProModalVisible(true);
+  };
+
+  const handleActivityTabChange = (next: ActivityType) => {
+    // Scuba and Snorkeling show a different set/count of StatCards, so this
+    // keeps the swap a soft fade rather than an instant jump.
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setActiveActivityTab(next);
+  };
+
   const displayName = user?.fullName?.trim() || user?.username || "Ocean Explorer";
-  const email = user?.primaryEmailAddress?.emailAddress;
-  const recentPhotos = adventures.filter((a) => a.photo_url);
+  const avatarUri = localProfile.photoUri ?? user?.imageUrl ?? null;
+  const hasBio = Boolean(localProfile.bio && localProfile.bio.trim());
+  const homeCountry = COUNTRIES.find((c) => c.code === localProfile.homeCountryCode);
+  const recentPhotos = adventures.filter((a) => a.photos.length > 0);
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <LinearGradient colors={["#02101F", "#062C43", "#0B3D5C"]} style={styles.header}>
-          <View style={styles.avatarWrap}>
-            {user?.imageUrl ? (
-              <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
+          <View style={styles.settingsCogWrap}>
+            <SettingsCogButton onPress={() => setIsSettingsMenuVisible(true)} />
+          </View>
+          <Pressable
+            style={({ pressed }) => [styles.avatarWrap, pressed && styles.avatarWrapPressed]}
+            onPress={handleAvatarPress}
+            accessibilityRole="button"
+            accessibilityLabel="Change profile photo"
+          >
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatar} />
             ) : (
               <View style={[styles.avatar, styles.avatarPlaceholder]}>
                 <Ionicons name="person" size={30} color="#FFFFFF" />
               </View>
             )}
-            <Pressable
-              style={styles.avatarEditBadge}
-              hitSlop={8}
-              onPress={() =>
-                Alert.alert(
-                  "Coming soon",
-                  "Profile photo uploads will be available in a future update."
-                )
-              }
-            >
+            <View style={styles.avatarOverlay}>
+              <Ionicons name="camera" size={18} color="#FFFFFF" />
+            </View>
+            <View style={styles.avatarEditBadge}>
               <Ionicons name="camera" size={14} color="#0B3D5C" />
-            </Pressable>
+            </View>
+          </Pressable>
+          <View style={styles.identityCard}>
+            <Text style={styles.name}>{displayName}</Text>
+            <Text style={hasBio ? styles.bio : styles.bioPlaceholder} numberOfLines={2}>
+              {hasBio ? localProfile.bio : "Add a bio..."}
+            </Text>
+            <View style={styles.homeCountryRow}>
+              {homeCountry ? (
+                <>
+                  <Text style={styles.homeCountryFlag}>{countryCodeToFlag(homeCountry.code)}</Text>
+                  <Text style={styles.homeCountryText}>{homeCountry.name}</Text>
+                </>
+              ) : (
+                <Text style={styles.homeCountryPlaceholder}>Select your home country</Text>
+              )}
+            </View>
           </View>
-          <Text style={styles.name}>{displayName}</Text>
-          {email ? <Text style={styles.email}>{email}</Text> : null}
         </LinearGradient>
 
         {isProfileLoaded && (
@@ -208,7 +352,7 @@ export default function ProfileScreen() {
               <SegmentedControl
                 options={ACTIVITY_TAB_OPTIONS}
                 value={activeActivityTab}
-                onChange={setActiveActivityTab}
+                onChange={handleActivityTabChange}
               />
               <View style={styles.segmentedControlSpacer} />
               {activeActivityTab === "scuba" ? (
@@ -257,25 +401,17 @@ export default function ProfileScreen() {
                 <>
                   <View style={styles.statsGridRow}>
                     <StatCard
-                      icon="water-outline"
-                      label="Total Snorkeling Trips"
-                      value={String(snorkelingStats?.total_trips ?? 0)}
-                    />
-                    <StatCard
-                      icon="time-outline"
-                      label="Total Surface Time"
-                      value={formatHours(snorkelingStats?.total_minutes ?? 0)}
+                      featured
+                      icon="hourglass-outline"
+                      label="Total Snorkel Time"
+                      value={formatSnorkelDuration(snorkelingStats?.total_minutes ?? 0)}
                     />
                   </View>
                   <View style={styles.statsGridRow}>
                     <StatCard
-                      icon="arrow-down-outline"
-                      label="Deepest Snorkel Breath"
-                      value={
-                        snorkelingStats?.deepest_meters != null
-                          ? formatDepth(snorkelingStats.deepest_meters, unitSystem)
-                          : "—"
-                      }
+                      icon="water-outline"
+                      label="Total Snorkeling Trips"
+                      value={String(snorkelingStats?.total_trips ?? 0)}
                     />
                     <StatCard
                       icon="heart-outline"
@@ -285,6 +421,74 @@ export default function ProfileScreen() {
                   </View>
                 </>
               )}
+            </AccordionSection>
+
+            <AccordionSection title="Achievement Milestone Matrix" icon="trophy-outline" defaultExpanded>
+              <Text style={styles.subLabel}>SCUBA MILESTONES</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.achievementScrollRow}
+              >
+                {achievements.scuba.map((achievement) => (
+                  <AchievementBadge
+                    key={achievement.id}
+                    achievement={achievement}
+                    onPress={setSelectedAchievement}
+                  />
+                ))}
+              </ScrollView>
+
+              <Text style={[styles.subLabel, styles.subLabelSpaced]}>SNORKEL MILESTONES</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.achievementScrollRow}
+              >
+                {achievements.snorkel.map((achievement) => (
+                  <AchievementBadge
+                    key={achievement.id}
+                    achievement={achievement}
+                    onPress={setSelectedAchievement}
+                  />
+                ))}
+              </ScrollView>
+
+              <Text style={[styles.subLabel, styles.subLabelSpaced]}>CERTIFICATIONS</Text>
+              <View style={styles.achievementRow}>
+                {achievements.certification.map((achievement) => (
+                  <AchievementBadge
+                    key={achievement.id}
+                    achievement={achievement}
+                    onPress={setSelectedAchievement}
+                  />
+                ))}
+              </View>
+              <SettingsRow
+                icon="ribbon-outline"
+                label="My Certifications & Licenses"
+                subtext={
+                  localProfile.certifications.length > 0
+                    ? `${localProfile.certifications.length} of ${CERTIFICATIONS.length} logged`
+                    : "Log your real-world diving credentials"
+                }
+                onPress={() => setIsCertificationsModalVisible(true)}
+              />
+
+              <Text style={[styles.subLabel, styles.subLabelSpaced]}>GLOBAL & ADVENTURE</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.achievementScrollRow}
+              >
+                {achievements.global.map((achievement) => (
+                  <AchievementBadge
+                    key={achievement.id}
+                    achievement={achievement}
+                    onPress={setSelectedAchievement}
+                  />
+                ))}
+              </ScrollView>
             </AccordionSection>
 
             <AccordionSection
@@ -311,90 +515,21 @@ export default function ProfileScreen() {
                   contentContainerStyle={styles.photoRow}
                 >
                   {recentPhotos.map((adventure) => (
-                    <Image
-                      key={adventure.id}
-                      source={{ uri: adventure.photo_url! }}
-                      style={styles.photoThumb}
-                    />
+                    <View key={adventure.id} style={styles.photoThumbWrap}>
+                      <Image source={{ uri: adventure.photos[0] }} style={styles.photoThumb} />
+                      <View style={styles.photoDurationPill}>
+                        <Text style={styles.photoDurationPillText}>
+                          ⏱️ {adventure.duration_minutes}m
+                        </Text>
+                      </View>
+                    </View>
                   ))}
                 </ScrollView>
               ) : (
                 <Text style={styles.emptyGalleryText}>
-                  No photos yet. Add one next time you log a dive.
+                  No photos yet. Add one next time you log an adventure.
                 </Text>
               )}
-
-              <Text style={[styles.subLabel, styles.achievementsLabel]}>ACHIEVEMENTS</Text>
-              <View style={styles.achievementsGrid}>
-                {ACHIEVEMENTS.map((achievement) => (
-                  <View key={achievement.name} style={styles.achievementTile}>
-                    <Ionicons name={achievement.icon} size={22} color="#94A3B8" />
-                    <Text style={styles.achievementName}>{achievement.name}</Text>
-                    <View style={styles.lockBadge}>
-                      <Ionicons name="lock-closed" size={10} color="#FFFFFF" />
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </AccordionSection>
-
-            <AccordionSection title="My Gear" icon="bag-handle-outline">
-              <SettingsRow
-                icon="construct-outline"
-                label="Manage Equipment"
-                subtext={
-                  localProfile.gear.length > 0
-                    ? `${localProfile.gear.length} item${localProfile.gear.length === 1 ? "" : "s"} tracked`
-                    : "Add your wetsuit, fins, computer & more"
-                }
-                onPress={() => setIsGearModalVisible(true)}
-              />
-            </AccordionSection>
-
-            <AccordionSection title="Preferences & Units" icon="options-outline">
-              <SettingsRow
-                icon="thermometer-outline"
-                label="Unit Measurements"
-                rightElement={
-                  <View style={styles.unitToggleWrap}>
-                    <SegmentedControl
-                      options={UNIT_SYSTEM_OPTIONS}
-                      value={unitSystem}
-                      onChange={setUnitSystem}
-                    />
-                  </View>
-                }
-              />
-              <SettingsRow
-                icon="map-outline"
-                label="Map Preferences"
-                subtext={MAP_STYLE_LABELS[mapStyle]}
-                onPress={() => setIsMapStylePickerVisible(true)}
-              />
-            </AccordionSection>
-
-            <AccordionSection title="Account & Premium" icon="person-circle-outline">
-              <SettingsRow
-                icon="create-outline"
-                label="Edit Profile"
-                subtext="Name, email, bio & home country"
-                onPress={() => setIsEditProfileVisible(true)}
-              />
-              <SettingsRow
-                icon="star"
-                label="Ocean Atlas Pro"
-                subtext="Unlock premium features"
-                highlighted
-                onPress={() =>
-                  Alert.alert("Ocean Atlas Pro", "Premium subscriptions are coming soon!")
-                }
-              />
-              <SettingsRow
-                icon="lock-closed-outline"
-                label="Privacy Controls"
-                subtext="Manage who can see your map & logs"
-                onPress={() => setIsPrivacyModalVisible(true)}
-              />
             </AccordionSection>
           </>
         )}
@@ -405,14 +540,6 @@ export default function ProfileScreen() {
             label="Add New Adventure"
             onPress={() => router.push("/log")}
           />
-          <View style={styles.utilitiesDivider} />
-          <Pressable style={styles.logOutRow} onPress={handleLogOut}>
-            <View style={styles.logOutIconBadge}>
-              <Ionicons name="log-out-outline" size={17} color="#B00020" />
-            </View>
-            <Text style={styles.logOutLabel}>Log Out</Text>
-          </Pressable>
-          <Text style={styles.versionText}>Ocean Atlas v{appVersion} (Production Build)</Text>
         </View>
       </ScrollView>
 
@@ -420,6 +547,7 @@ export default function ProfileScreen() {
         key={selectedAdventure?.id ?? "none"}
         adventure={selectedAdventure}
         onClose={() => setSelectedAdventure(null)}
+        onDelete={handleDeleteAdventure}
       />
 
       <GearManagerModal
@@ -448,6 +576,43 @@ export default function ProfileScreen() {
         value={mapStyle}
         onSelect={setMapStyle}
       />
+
+      <SettingsMenuModal
+        visible={isSettingsMenuVisible}
+        onClose={() => setIsSettingsMenuVisible(false)}
+        onEditProfile={openEditProfile}
+        onManageGear={openGearManager}
+        onOpenSvelPro={openSvelPro}
+        onPrivacyControls={openPrivacyControls}
+        onMapPreferences={openMapStylePicker}
+        gearSubtext={
+          localProfile.gear.length > 0
+            ? `${localProfile.gear.length} item${localProfile.gear.length === 1 ? "" : "s"} tracked`
+            : "Add your wetsuit, fins, computer & more"
+        }
+        unitSystem={unitSystem}
+        onUnitSystemChange={setUnitSystem}
+        mapStyleLabel={MAP_STYLE_LABELS[mapStyle]}
+        onLogOut={handleLogOut}
+        appVersion={appVersion}
+      />
+
+      <SvelProModal
+        visible={isSvelProModalVisible}
+        onClose={() => setIsSvelProModalVisible(false)}
+      />
+
+      <CertificationsModal
+        visible={isCertificationsModalVisible}
+        onClose={() => setIsCertificationsModalVisible(false)}
+        certifications={localProfile.certifications}
+        onToggle={toggleCertification}
+      />
+
+      <AchievementDetailModal
+        achievement={selectedAchievement}
+        onClose={() => setSelectedAchievement(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -458,7 +623,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F2F6FC",
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 40 + TAB_BAR_HEIGHT,
   },
   header: {
     alignItems: "center",
@@ -467,6 +632,12 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     marginBottom: 16,
+  },
+  settingsCogWrap: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 10,
   },
   avatarWrap: {
     width: 84,
@@ -477,6 +648,9 @@ const styles = StyleSheet.create({
     padding: 3,
     marginBottom: 14,
   },
+  avatarWrapPressed: {
+    opacity: 0.85,
+  },
   avatar: {
     width: "100%",
     height: "100%",
@@ -484,6 +658,17 @@ const styles = StyleSheet.create({
   },
   avatarPlaceholder: {
     backgroundColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarOverlay: {
+    position: "absolute",
+    top: 3,
+    left: 3,
+    right: 3,
+    bottom: 3,
+    borderRadius: 39,
+    backgroundColor: "rgba(2, 16, 25, 0.28)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -506,10 +691,58 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     letterSpacing: 0.2,
   },
-  email: {
-    fontSize: 13,
-    color: "#8FB8CE",
+  identityCard: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    marginHorizontal: 20,
     marginTop: 4,
+    paddingHorizontal: 22,
+    paddingVertical: 18,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  bio: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#C7DCE8",
+    textAlign: "center",
+    lineHeight: 18,
+    marginTop: 6,
+  },
+  bioPlaceholder: {
+    fontSize: 13,
+    fontWeight: "500",
+    fontStyle: "italic",
+    color: "#6E93A8",
+    textAlign: "center",
+    marginTop: 6,
+  },
+  homeCountryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
+  },
+  homeCountryFlag: {
+    fontSize: 14,
+  },
+  homeCountryText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#8FB8CE",
+  },
+  homeCountryPlaceholder: {
+    fontSize: 12,
+    fontWeight: "500",
+    fontStyle: "italic",
+    color: "#6E93A8",
   },
   segmentedControlSpacer: {
     height: 14,
@@ -531,11 +764,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 10,
   },
-  achievementsLabel: {
+  subLabelSpaced: {
     marginTop: 18,
   },
   photoRow: {
     gap: 10,
+  },
+  photoThumbWrap: {
+    position: "relative",
+    // Without this, the wrapper stretches to the horizontal ScrollView row's
+    // full cross-axis height (flexbox's default alignItems: "stretch"),
+    // so the pill's `bottom` would anchor to that stretched height instead
+    // of the 90px-tall image actually visible inside it.
+    alignSelf: "flex-start",
   },
   photoThumb: {
     width: 90,
@@ -543,46 +784,35 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#E2E8F0",
   },
+  photoDurationPill: {
+    position: "absolute",
+    bottom: 6,
+    left: 6,
+    backgroundColor: "rgba(2, 16, 25, 0.68)",
+    borderRadius: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+  },
+  photoDurationPillText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
   emptyGalleryText: {
     fontSize: 13,
     color: "#94A3B8",
     fontStyle: "italic",
   },
-  achievementsGrid: {
+  achievementScrollRow: {
+    flexDirection: "row",
+    gap: 14,
+    paddingBottom: 4,
+  },
+  achievementRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
-  },
-  achievementTile: {
-    width: "31%",
-    aspectRatio: 1,
-    backgroundColor: "#F2F6FC",
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    position: "relative",
-  },
-  achievementName: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#94A3B8",
-    textAlign: "center",
-    paddingHorizontal: 4,
-  },
-  lockBadge: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: "#94A3B8",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  unitToggleWrap: {
-    width: 160,
+    gap: 14,
+    paddingBottom: 4,
   },
   centered: {
     alignItems: "center",
@@ -607,35 +837,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 3,
-  },
-  utilitiesDivider: {
-    height: 1,
-    backgroundColor: "#F2F6FC",
-    marginVertical: 4,
-  },
-  logOutRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 12,
-  },
-  logOutIconBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#FBEAEA",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logOutLabel: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#B00020",
-  },
-  versionText: {
-    fontSize: 11,
-    color: "#B7C2D0",
-    textAlign: "center",
-    marginTop: 12,
   },
 });

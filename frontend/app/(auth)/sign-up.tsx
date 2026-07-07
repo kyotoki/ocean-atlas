@@ -1,6 +1,6 @@
 import { useSignUp } from "@clerk/clerk-expo";
 import { Link, useRouter } from "expo-router";
-import { createElement, useState } from "react";
+import { createElement, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Text, TextInput, TouchableOpacity } from "react-native";
 
 import { authStyles, PLACEHOLDER_COLOR } from "../../components/auth/authStyles";
@@ -15,6 +15,7 @@ const CaptchaSlot = () =>
 export default function SignUpScreen() {
   const { signUp, setActive, isLoaded } = useSignUp();
   const router = useRouter();
+  const passwordInputRef = useRef<TextInput>(null);
 
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
@@ -52,6 +53,10 @@ export default function SignUpScreen() {
 
       if (attempt.status === "complete") {
         await setActive({ session: attempt.createdSessionId });
+        // Not "/onboarding" directly - (auth)/_layout.tsx's own redirect fires
+        // the instant isSignedIn flips true and would win the race against
+        // this call anyway, so it's the single source of truth for whether a
+        // freshly-signed-in user lands on "/" or "/onboarding".
         router.replace("/");
       } else {
         setError("Verification is incomplete. Double-check the code.");
@@ -76,6 +81,8 @@ export default function SignUpScreen() {
           keyboardType="number-pad"
           value={code}
           onChangeText={setCode}
+          returnKeyType="done"
+          onSubmitEditing={onVerifyPress}
         />
 
         {error ? <Text style={authStyles.error}>{error}</Text> : null}
@@ -98,7 +105,7 @@ export default function SignUpScreen() {
 
   return (
     <OceanAuthLayout
-      title="Ocean Atlas"
+      title="Svel"
       subtitle="Create an account to get started"
       footer={
         <>
@@ -118,8 +125,12 @@ export default function SignUpScreen() {
         keyboardType="email-address"
         value={emailAddress}
         onChangeText={setEmailAddress}
+        returnKeyType="next"
+        blurOnSubmit={false}
+        onSubmitEditing={() => passwordInputRef.current?.focus()}
       />
       <TextInput
+        ref={passwordInputRef}
         style={authStyles.input}
         placeholder="Password"
         placeholderTextColor={PLACEHOLDER_COLOR}
@@ -127,6 +138,8 @@ export default function SignUpScreen() {
         autoCapitalize="none"
         value={password}
         onChangeText={setPassword}
+        returnKeyType="go"
+        onSubmitEditing={onSignUpPress}
       />
 
       {error ? <Text style={authStyles.error}>{error}</Text> : null}

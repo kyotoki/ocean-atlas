@@ -1,9 +1,10 @@
 import { useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { countryCodeToFlag, COUNTRIES } from "../../utils/countries";
+import { showAlert } from "../../utils/crossPlatformAlert";
 import { LocalProfileFields } from "../../utils/profileStorage";
 import CountryPickerModal from "./CountryPickerModal";
 
@@ -45,7 +46,7 @@ export default function EditProfileModal({
       try {
         await user.update({ firstName, lastName });
       } catch {
-        Alert.alert("Unable to update name", "Check your connection and try again.");
+        showAlert("Unable to update name", "Check your connection and try again.");
       } finally {
         setIsSavingName(false);
       }
