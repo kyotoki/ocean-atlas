@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { colors, radius, spacing, typography } from "../../constants/theme";
+
 interface SegmentedControlOption<T extends string> {
   value: T;
   label: string;
@@ -39,27 +41,27 @@ export default function SegmentedControl<T extends string>({
 const styles = StyleSheet.create({
   track: {
     flexDirection: "row",
-    backgroundColor: "#F2F6FC",
-    borderRadius: 12,
-    padding: 4,
-    gap: 4,
+    backgroundColor: colors.surface.page,
+    borderRadius: radius.md,
+    padding: spacing.xxs,
+    gap: spacing.xxs,
   },
   segment: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 8,
-    borderRadius: 9,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
   },
   segmentActive: {
-    backgroundColor: "#0B3D5C",
+    backgroundColor: colors.secondary,
   },
   segmentText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#5A6B87",
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.bold,
+    color: colors.text.secondary,
   },
   segmentTextActive: {
-    color: "#FFFFFF",
+    color: colors.text.inverse,
   },
 });

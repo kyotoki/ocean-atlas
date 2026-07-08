@@ -1,3 +1,6 @@
+# Root (Docker Compose secrets)
+/.env
+
 # Backend (Python)
 backend/__pycache__/
 backend/**/__pycache__/

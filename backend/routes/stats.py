@@ -1,5 +1,3 @@
-from typing import Literal
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -51,10 +49,11 @@ def get_dive_stats(
 
 @router.get("/by-activity", response_model=schemas.ActivityStats)
 def get_activity_stats(
-    activity_type: Literal["scuba", "snorkeling"] = Query(...),
+    activity_type: str = Query(..., min_length=1, max_length=30),
     db: Session = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
+    activity_type = activity_type.strip().lower()
     scope = (
         models.Adventure.user_id == user_id,
         models.Adventure.activity_type == activity_type,

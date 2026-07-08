@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: svel
+      POSTGRES_PASSWORD: svel
+      POSTGRES_DB: svel
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U svel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Local stand-in for the Cloudflare R2 bucket this will point at in Month 4 -
+  # MinIO and R2 both speak the S3 API, so backend/storage.py doesn't change.
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      # Read from the root .env (gitignored, generate with .env.example's
+      # instructions) - not the minioadmin/minioadmin default.
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in .env - see .env.example}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env - see .env.example}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  # One-shot container that creates the photos bucket and makes it publicly
+  # readable, then exits - mirrors how a real R2 bucket would be configured by
+  # hand, but scripted so `docker compose up` needs no manual setup step.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 '${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in .env - see .env.example}' '${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env - see .env.example}'; do sleep 1; done;
+      mc mb -p local/svel-photos;
+      mc anonymous set download local/svel-photos;
+      "
+
+  backend:
+    build: ./backend
+    env_file:
+      # Not committed (see .gitignore) - only needed for CLERK_SECRET_KEY;
+      # harmless if you haven't created it yet.
+      - path: backend/.env
+        required: false
+    environment:
+      # Fixed local values for this month - see backend/.env.example for the
+      # Month 4 swap-to-real-credentials note.
+      DATABASE_URL: postgresql://svel:svel@postgres:5432/svel
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in .env - see .env.example}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env - see .env.example}
+      S3_BUCKET_NAME: svel-photos
+      S3_PUBLIC_BASE_URL: http://localhost:9000/svel-photos
+      ALLOWED_ORIGINS: http://localhost:8081,http://localhost:19006
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./backend:/app
+
+volumes:
+  postgres_data:
+  minio_data:

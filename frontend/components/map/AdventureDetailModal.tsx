@@ -1,16 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { colors, elevation, radius, spacing, typography } from "../../constants/theme";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { Adventure } from "../../types/adventure";
 import { showAlert } from "../../utils/crossPlatformAlert";
 import { formatDepth, formatTemperature } from "../../utils/units";
+import WaveSpinner from "../ui/WaveSpinner";
 import PhotoCarousel from "./PhotoCarousel";
 
 interface AdventureDetailModalProps {
   adventure: Adventure | null;
   onClose: () => void;
-  onDelete: (adventure: Adventure) => void;
+  onDelete: (adventure: Adventure) => Promise<void>;
 }
 
 export default function AdventureDetailModal({
@@ -19,6 +22,7 @@ export default function AdventureDetailModal({
   onDelete,
 }: AdventureDetailModalProps) {
   const { unitSystem } = usePreferences();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!adventure) {
     return null;
@@ -30,7 +34,18 @@ export default function AdventureDetailModal({
       "Are you sure you want to permanently delete this adventure?",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => onDelete(adventure) },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setIsDeleting(true);
+            try {
+              await onDelete(adventure);
+            } finally {
+              setIsDeleting(false);
+            }
+          },
+        },
       ]
     );
   };
@@ -48,7 +63,7 @@ export default function AdventureDetailModal({
           <View style={styles.photoWrap}>
             <PhotoCarousel photos={adventure.photos} height={180} />
             <Pressable style={styles.closeButton} onPress={onClose} hitSlop={10}>
-              <Ionicons name="close" size={20} color="#FFFFFF" />
+              <Ionicons name="close" size={20} color={colors.text.inverse} />
             </Pressable>
           </View>
 
@@ -58,13 +73,13 @@ export default function AdventureDetailModal({
 
             <View style={styles.statsRow}>
               <View style={styles.statPill}>
-                <Ionicons name="arrow-down-outline" size={13} color="#0B3D5C" />
+                <Ionicons name="arrow-down-outline" size={13} color={colors.secondary} />
                 <Text style={styles.statText}>
                   {formatDepth(adventure.max_depth_meters, unitSystem)}
                 </Text>
               </View>
               <View style={styles.statPill}>
-                <Ionicons name="time-outline" size={13} color="#0B3D5C" />
+                <Ionicons name="time-outline" size={13} color={colors.secondary} />
                 <Text style={styles.statText}>{adventure.duration_minutes} min</Text>
               </View>
             </View>
@@ -75,7 +90,7 @@ export default function AdventureDetailModal({
                 <View style={styles.conditionsRow}>
                   {adventure.water_temp_c != null && (
                     <View style={styles.conditionPill}>
-                      <Ionicons name="thermometer-outline" size={13} color="#0B3D5C" />
+                      <Ionicons name="thermometer-outline" size={13} color={colors.secondary} />
                       <Text style={styles.statText}>
                         {formatTemperature(adventure.water_temp_c, unitSystem)}
                       </Text>
@@ -83,7 +98,7 @@ export default function AdventureDetailModal({
                   )}
                   {adventure.wave_height_m != null && (
                     <View style={styles.conditionPill}>
-                      <Ionicons name="water-outline" size={13} color="#0B3D5C" />
+                      <Ionicons name="water-outline" size={13} color={colors.secondary} />
                       <Text style={styles.statText}>
                         {formatDepth(adventure.wave_height_m, unitSystem)} waves
                       </Text>
@@ -91,7 +106,7 @@ export default function AdventureDetailModal({
                   )}
                   {adventure.tide_height_m != null && (
                     <View style={styles.conditionPill}>
-                      <Ionicons name="swap-vertical-outline" size={13} color="#0B3D5C" />
+                      <Ionicons name="swap-vertical-outline" size={13} color={colors.secondary} />
                       <Text style={styles.statText}>
                         {formatDepth(adventure.tide_height_m, unitSystem)} tide
                       </Text>
@@ -106,9 +121,20 @@ export default function AdventureDetailModal({
               {hasNotes ? adventure.notes : "No notes added for this dive."}
             </Text>
 
-            <Pressable style={styles.deleteButton} onPress={handleDeletePress} hitSlop={8}>
-              <Ionicons name="trash-outline" size={15} color="#B00020" />
-              <Text style={styles.deleteButtonText}>Delete Log</Text>
+            <Pressable
+              style={styles.deleteButton}
+              onPress={handleDeletePress}
+              hitSlop={8}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <WaveSpinner size="small" color={colors.error} />
+              ) : (
+                <>
+                  <Ionicons name="trash-outline" size={15} color={colors.error} />
+                  <Text style={styles.deleteButtonText}>Delete Log</Text>
+                </>
+              )}
             </Pressable>
           </View>
         </Pressable>
@@ -120,119 +146,115 @@ export default function AdventureDetailModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   card: {
     width: "100%",
     maxWidth: 360,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.xxl,
     overflow: "hidden",
-    shadowColor: "#021019",
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.32,
-    shadowRadius: 24,
-    elevation: 12,
+    ...elevation.modal,
   },
   photoWrap: {
     width: "100%",
     height: 180,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: colors.border.default,
   },
   closeButton: {
     position: "absolute",
-    top: 12,
-    right: 12,
+    top: spacing.sm,
+    right: spacing.sm,
     width: 32,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    borderRadius: radius.full,
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
   },
   body: {
-    padding: 20,
+    padding: spacing.lg,
   },
   title: {
-    fontSize: 19,
-    fontWeight: "800",
-    color: "#101828",
+    fontSize: typography.size.title,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
     letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#0B3D5C",
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.semibold,
+    color: colors.secondary,
     textTransform: "uppercase",
     letterSpacing: 0.6,
-    marginTop: 4,
-    marginBottom: 16,
+    marginTop: spacing.xxs,
+    marginBottom: spacing.md,
   },
   statsRow: {
     flexDirection: "row",
-    gap: 10,
-    marginBottom: 18,
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   statPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    backgroundColor: "#EAF6FA",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    gap: spacing.xs,
+    backgroundColor: colors.surface.tint,
+    borderRadius: radius.xl,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   statText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#0B3D5C",
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.bold,
+    color: colors.secondary,
   },
   conditionsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 16,
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   },
   conditionPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    backgroundColor: "#EAF6FA",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    gap: spacing.xs,
+    backgroundColor: colors.surface.tint,
+    borderRadius: radius.xl,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   notesLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#94A3B8",
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    color: colors.text.tertiary,
     letterSpacing: 0.8,
-    marginBottom: 6,
+    marginBottom: spacing.xs,
   },
   notes: {
-    fontSize: 14,
-    color: "#344054",
-    lineHeight: 21,
+    fontSize: typography.size.body,
+    color: colors.text.label,
+    lineHeight: typography.lineHeight.body,
   },
   notesEmpty: {
-    fontSize: 14,
-    color: "#94A3B8",
+    fontSize: typography.size.body,
+    color: colors.text.tertiary,
     fontStyle: "italic",
   },
   deleteButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    marginTop: 18,
-    paddingVertical: 10,
+    gap: spacing.xs,
+    marginTop: spacing.lg,
+    paddingVertical: spacing.sm,
   },
   deleteButtonText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#B00020",
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.bold,
+    color: colors.error,
   },
 });

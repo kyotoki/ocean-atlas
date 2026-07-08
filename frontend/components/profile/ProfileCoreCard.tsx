@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { colors, elevation, radius, spacing, typography } from "../../constants/theme";
 import { CERTIFICATIONS } from "../../utils/certifications";
 import { countryCodeToFlag, COUNTRIES } from "../../utils/countries";
 import { LocalProfileFields } from "../../utils/profileStorage";
@@ -31,7 +32,7 @@ export default function ProfileCoreCard({ profile, onUpdate }: ProfileCoreCardPr
       <TextInput
         style={styles.bioInput}
         placeholder="Add a short bio about your diving journey..."
-        placeholderTextColor="#A0AEC0"
+        placeholderTextColor={colors.text.muted}
         value={bioDraft}
         onChangeText={setBioDraft}
         onBlur={() => onUpdate({ bio: bioDraft })}
@@ -50,7 +51,12 @@ export default function ProfileCoreCard({ profile, onUpdate }: ProfileCoreCardPr
         ) : (
           <Text style={styles.countryPlaceholder}>Select your home country</Text>
         )}
-        <Ionicons name="chevron-forward" size={16} color="#94A3B8" style={styles.countryChevron} />
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={colors.text.tertiary}
+          style={styles.countryChevron}
+        />
       </Pressable>
 
       <Text style={styles.label}>CERTIFICATIONS</Text>
@@ -66,7 +72,7 @@ export default function ProfileCoreCard({ profile, onUpdate }: ProfileCoreCardPr
               <Ionicons
                 name="ribbon-outline"
                 size={13}
-                color={selected ? "#FFFFFF" : "#0B3D5C"}
+                color={selected ? colors.text.inverse : colors.secondary}
               />
               <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{cert.label}</Text>
             </Pressable>
@@ -85,54 +91,50 @@ export default function ProfileCoreCard({ profile, onUpdate }: ProfileCoreCardPr
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    marginHorizontal: 16,
-    marginBottom: 14,
-    padding: 16,
-    shadowColor: "#021019",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.lg,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    ...elevation.card,
   },
   label: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#94A3B8",
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    color: colors.text.tertiary,
     letterSpacing: 0.8,
-    marginBottom: 6,
+    marginBottom: spacing.xs,
   },
   bioInput: {
-    fontSize: 14,
-    color: "#344054",
-    lineHeight: 20,
+    fontSize: typography.size.body,
+    color: colors.text.label,
+    lineHeight: typography.lineHeight.body,
     minHeight: 60,
     textAlignVertical: "top",
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   countryRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: "#F2F6FC",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 16,
+    gap: spacing.xs,
+    backgroundColor: colors.surface.page,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
   },
   flag: {
-    fontSize: 18,
+    fontSize: typography.size.small,
   },
   countryName: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#344054",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.label,
     flex: 1,
   },
   countryPlaceholder: {
-    fontSize: 14,
-    color: "#94A3B8",
+    fontSize: typography.size.body,
+    color: colors.text.tertiary,
     flex: 1,
   },
   countryChevron: {
@@ -141,26 +143,26 @@ const styles = StyleSheet.create({
   chipsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: spacing.xs,
   },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    backgroundColor: "#EAF6FA",
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    gap: spacing.xs,
+    backgroundColor: colors.surface.tint,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   chipSelected: {
-    backgroundColor: "#0B3D5C",
+    backgroundColor: colors.secondary,
   },
   chipText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#0B3D5C",
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.bold,
+    color: colors.secondary,
   },
   chipTextSelected: {
-    color: "#FFFFFF",
+    color: colors.text.inverse,
   },
 });

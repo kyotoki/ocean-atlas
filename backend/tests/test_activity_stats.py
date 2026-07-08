@@ -28,9 +28,25 @@ def test_adventure_can_be_logged_as_snorkeling():
     assert resp.json()["activity_type"] == "snorkeling"
 
 
-def test_invalid_activity_type_is_rejected():
+def test_arbitrary_activity_type_is_accepted():
+    # activity_type is an open, validated string field (not a closed enum),
+    # so values beyond scuba/snorkeling are accepted - only shape (non-empty,
+    # bounded length) is validated here.
     as_user("user_a")
     resp = create_dive(activity_type="surfing")
+    assert resp.status_code == 201
+    assert resp.json()["activity_type"] == "surfing"
+
+
+def test_empty_activity_type_is_rejected():
+    as_user("user_a")
+    resp = create_dive(activity_type="")
+    assert resp.status_code == 422
+
+
+def test_overly_long_activity_type_is_rejected():
+    as_user("user_a")
+    resp = create_dive(activity_type="x" * 31)
     assert resp.status_code == 422
 
 
@@ -105,7 +121,14 @@ def test_activity_stats_requires_authentication():
         restore_auth_override()
 
 
-def test_activity_stats_requires_a_valid_activity_type_param():
+def test_activity_stats_accepts_an_arbitrary_activity_type_param():
     as_user("user_a")
     resp = client.get("/stats/by-activity", params={"activity_type": "surfing"})
+    assert resp.status_code == 200
+    assert resp.json()["activity_type"] == "surfing"
+
+
+def test_activity_stats_rejects_an_empty_activity_type_param():
+    as_user("user_a")
+    resp = client.get("/stats/by-activity", params={"activity_type": ""})
     assert resp.status_code == 422

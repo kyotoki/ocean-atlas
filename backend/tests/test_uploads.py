@@ -3,13 +3,18 @@ import io
 import pytest
 from PIL import Image
 
+import storage as storage_module
 from conftest import as_user, client, remove_auth_override, reset_current_user, restore_auth_override
 from routes import uploads as uploads_module
 
 
 @pytest.fixture(autouse=True)
 def isolated_upload_root(tmp_path, monkeypatch):
-    monkeypatch.setattr(uploads_module, "UPLOAD_ROOT", tmp_path)
+    # Forces the local-disk branch regardless of ambient S3_* env vars, so
+    # this suite deterministically covers the disk-fallback path whether it's
+    # run bare or inside the Docker stack (where S3_BUCKET_NAME is set).
+    monkeypatch.setattr(storage_module, "USE_S3", False)
+    monkeypatch.setattr(storage_module, "UPLOAD_ROOT", tmp_path)
     reset_current_user()
     yield tmp_path
 

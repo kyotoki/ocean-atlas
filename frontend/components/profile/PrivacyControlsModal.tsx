@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
+import { colors, radius, spacing, typography } from "../../constants/theme";
+
 interface PrivacyControlsModalProps {
   visible: boolean;
   onClose: () => void;
@@ -23,7 +25,7 @@ export default function PrivacyControlsModal({ visible, onClose }: PrivacyContro
           <View style={styles.headerRow}>
             <Text style={styles.title}>Privacy Controls</Text>
             <Pressable onPress={onClose} hitSlop={10}>
-              <Ionicons name="close" size={20} color="#5A6B87" />
+              <Ionicons name="close" size={20} color={colors.text.secondary} />
             </Pressable>
           </View>
 
@@ -56,56 +58,56 @@ export default function PrivacyControlsModal({ visible, onClose }: PrivacyContro
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   card: {
     width: "100%",
     maxWidth: 380,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 18,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   title: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#101828",
+    fontSize: typography.size.subtitle,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "#F2F6FC",
+    borderBottomColor: colors.surface.page,
   },
   rowText: {
     flex: 1,
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
   rowLabel: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#101828",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
   },
   rowSubtext: {
-    fontSize: 12,
-    color: "#94A3B8",
-    marginTop: 2,
+    fontSize: typography.size.small,
+    color: colors.text.tertiary,
+    marginTop: spacing.xxs,
   },
   note: {
-    fontSize: 11,
-    color: "#94A3B8",
+    fontSize: typography.size.caption,
+    color: colors.text.tertiary,
     fontStyle: "italic",
-    marginTop: 14,
-    lineHeight: 16,
+    marginTop: spacing.md,
+    lineHeight: typography.lineHeight.caption,
   },
 });

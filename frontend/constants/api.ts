@@ -12,7 +12,9 @@ const getBaseUrl = (): string => {
   return `http://localhost:${API_PORT}`;
 };
 
-export const API_BASE_URL = getBaseUrl();
+// EXPO_PUBLIC_API_URL lets this point at a real deployment later (Month 4)
+// with no code change - only the env value changes.
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || getBaseUrl();
 
 export const ENDPOINTS = {
   // Trailing slash matters here: the backend route is registered as "/" under

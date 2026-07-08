@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { colors, radius, spacing, typography } from "../../constants/theme";
 import { CERTIFICATIONS } from "../../utils/certifications";
 
 interface CertificationsModalProps {
@@ -23,7 +24,7 @@ export default function CertificationsModal({
           <View style={styles.headerRow}>
             <Text style={styles.title}>My Certifications & Licenses</Text>
             <Pressable onPress={onClose} hitSlop={10}>
-              <Ionicons name="close" size={20} color="#5A6B87" />
+              <Ionicons name="close" size={20} color={colors.text.secondary} />
             </Pressable>
           </View>
           <Text style={styles.subtitle}>
@@ -39,7 +40,7 @@ export default function CertificationsModal({
                 onPress={() => onToggle(cert.value)}
               >
                 <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-                  {checked && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+                  {checked && <Ionicons name="checkmark" size={14} color={colors.text.inverse} />}
                 </View>
                 <Text style={styles.rowLabel}>{cert.label}</Text>
               </Pressable>
@@ -54,61 +55,61 @@ export default function CertificationsModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   card: {
     width: "100%",
     maxWidth: 380,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 18,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 6,
+    marginBottom: spacing.xs,
   },
   title: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#101828",
+    fontSize: typography.size.subtitle,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
     flex: 1,
-    marginRight: 12,
+    marginRight: spacing.sm,
   },
   subtitle: {
-    fontSize: 12,
-    color: "#94A3B8",
-    marginBottom: 14,
-    lineHeight: 17,
+    fontSize: typography.size.small,
+    color: colors.text.tertiary,
+    marginBottom: spacing.md,
+    lineHeight: typography.lineHeight.small,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 12,
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "#F2F6FC",
+    borderBottomColor: colors.surface.page,
   },
   checkbox: {
     width: 22,
     height: 22,
-    borderRadius: 6,
+    borderRadius: radius.sm,
     borderWidth: 2,
-    borderColor: "#D0D9E6",
+    borderColor: colors.border.strong,
     alignItems: "center",
     justifyContent: "center",
   },
   checkboxChecked: {
-    backgroundColor: "#0B3D91",
-    borderColor: "#0B3D91",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   rowLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#344054",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.label,
   },
 });

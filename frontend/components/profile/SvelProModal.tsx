@@ -3,6 +3,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { colors, gradients, radius, spacing, typography, withOpacity } from "../../constants/theme";
+
 interface SvelProModalProps {
   visible: boolean;
   onClose: () => void;
@@ -25,12 +27,12 @@ export default function SvelProModal({ visible, onClose }: SvelProModalProps) {
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-        <LinearGradient colors={["#02101F", "#062C43", "#0B3D5C"]} style={styles.hero}>
+        <LinearGradient colors={gradients.deepOcean} style={styles.hero}>
           <Pressable style={styles.closeButton} onPress={onClose} hitSlop={10}>
-            <Ionicons name="close" size={22} color="#FFFFFF" />
+            <Ionicons name="close" size={22} color={colors.text.inverse} />
           </Pressable>
           <View style={styles.heroIconBadge}>
-            <Ionicons name="star" size={28} color="#FFD873" />
+            <Ionicons name="star" size={28} color={colors.premium} />
           </View>
           <Text style={styles.heroTitle}>Svel Pro</Text>
           <Text style={styles.heroTagline}>Unlock the full ocean experience</Text>
@@ -41,25 +43,25 @@ export default function SvelProModal({ visible, onClose }: SvelProModalProps) {
             <Text style={styles.tierLabel}>FREE VERSION</Text>
             {FREE_FEATURES.map((feature) => (
               <View key={feature} style={styles.featureRow}>
-                <Ionicons name="checkmark-circle-outline" size={18} color="#94A3B8" />
+                <Ionicons name="checkmark-circle-outline" size={18} color={colors.text.tertiary} />
                 <Text style={styles.featureText}>{feature}</Text>
               </View>
             ))}
           </View>
 
           <LinearGradient
-            colors={["#0B3D5C", "#3E2E05", "#8A6300"]}
+            colors={[colors.secondary, colors.premiumTextStrong, colors.premiumText]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.tierCardPro}
           >
             <View style={styles.proTierHeader}>
-              <Ionicons name="star" size={16} color="#FFD873" />
+              <Ionicons name="star" size={16} color={colors.premium} />
               <Text style={styles.tierLabelPro}>SVEL PRO UPGRADE</Text>
             </View>
             {PRO_FEATURES.map((feature) => (
               <View key={feature} style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#FFD873" />
+                <Ionicons name="checkmark-circle" size={18} color={colors.premium} />
                 <Text style={styles.featureTextPro}>{feature}</Text>
               </View>
             ))}
@@ -68,7 +70,7 @@ export default function SvelProModal({ visible, onClose }: SvelProModalProps) {
 
         <View style={styles.ctaWrap}>
           <Pressable style={styles.ctaButton} disabled accessibilityState={{ disabled: true }}>
-            <Ionicons name="lock-closed-outline" size={16} color="rgba(255,255,255,0.7)" />
+            <Ionicons name="lock-closed-outline" size={16} color={withOpacity(colors.text.inverse, 0.7)} />
             <Text style={styles.ctaButtonText}>Upgrade to Pro — Coming Soon</Text>
           </Pressable>
           <Text style={styles.ctaNote}>Premium subscriptions aren't available yet.</Text>
@@ -81,70 +83,73 @@ export default function SvelProModal({ visible, onClose }: SvelProModalProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F6FC",
+    backgroundColor: colors.surface.page,
   },
   hero: {
     alignItems: "center",
-    paddingTop: 12,
-    paddingBottom: 28,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxl,
+    borderBottomLeftRadius: radius.xxl,
+    borderBottomRightRadius: radius.xxl,
   },
   closeButton: {
     position: "absolute",
-    top: 12,
-    right: 16,
+    top: spacing.sm,
+    right: spacing.md,
     width: 32,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.14)",
+    borderRadius: radius.full,
+    backgroundColor: withOpacity(colors.surface.card, 0.14),
     alignItems: "center",
     justifyContent: "center",
   },
   heroIconBadge: {
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: "rgba(255, 216, 115, 0.16)",
+    borderRadius: radius.full,
+    backgroundColor: withOpacity(colors.premium, 0.16),
     borderWidth: 1,
-    borderColor: "rgba(255, 216, 115, 0.4)",
+    borderColor: withOpacity(colors.premium, 0.4),
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 20,
-    marginBottom: 12,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   heroTitle: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#FFFFFF",
+    fontSize: typography.size.headline,
+    fontWeight: typography.weight.bold,
+    color: colors.text.inverse,
     letterSpacing: 0.3,
   },
   heroTagline: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#C7DCE8",
-    marginTop: 4,
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.inverseStrong,
+    marginTop: spacing.xxs,
   },
   scrollContent: {
-    padding: 16,
-    gap: 14,
+    padding: spacing.md,
+    gap: spacing.md,
   },
   tierCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 16,
-    gap: 12,
-    shadowColor: "#021019",
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    gap: spacing.sm,
+    // One-off card shadow (opacity/elevation don't match the standard "card"
+    // preset) - only the color is shared with the rest of the app.
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
     elevation: 2,
   },
   tierCardPro: {
-    borderRadius: 18,
-    padding: 16,
-    gap: 12,
-    shadowColor: "#8A6300",
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    gap: spacing.sm,
+    // One-off glow shadow tied to the premium gold color.
+    shadowColor: colors.premiumText,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 14,
@@ -153,62 +158,62 @@ const styles = StyleSheet.create({
   proTierHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 2,
+    gap: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   tierLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#94A3B8",
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    color: colors.text.tertiary,
     letterSpacing: 0.8,
   },
   tierLabelPro: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: "#FFD873",
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    color: colors.premium,
     letterSpacing: 0.8,
   },
   featureRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing.sm,
   },
   featureText: {
     flex: 1,
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#344054",
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.label,
   },
   featureTextPro: {
     flex: 1,
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#FFFFFF",
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.bold,
+    color: colors.text.inverse,
   },
   ctaWrap: {
-    padding: 16,
-    paddingTop: 8,
+    padding: spacing.md,
+    paddingTop: spacing.xs,
   },
   ctaButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#5A6B87",
+    gap: spacing.xs,
+    backgroundColor: colors.text.secondary,
     opacity: 0.6,
-    borderRadius: 14,
-    paddingVertical: 15,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md,
   },
   ctaButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#FFFFFF",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
+    color: colors.text.inverse,
   },
   ctaNote: {
-    fontSize: 11,
-    color: "#94A3B8",
+    fontSize: typography.size.caption,
+    color: colors.text.tertiary,
     textAlign: "center",
-    marginTop: 8,
+    marginTop: spacing.xs,
     fontStyle: "italic",
   },
 });

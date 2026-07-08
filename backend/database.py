@@ -1,10 +1,24 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./svel.db"
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./svel.db")
+
+# SQLAlchemy's psycopg dialect only recognizes the "postgresql://" scheme, but
+# most hosted Postgres providers (and Docker's own POSTGRES_* defaults) still
+# hand out "postgres://" URLs.
+if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(
+        "postgres://", "postgresql://", 1
+    )
+
+connect_args = {}
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL, pool_pre_ping=True, connect_args=connect_args
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -25,7 +39,14 @@ def run_migrations():
 
     create_all only creates missing tables, not missing columns on tables that
     already exist, so schema additions need an explicit, idempotent ALTER here.
+
+    This only applies to SQLite: a fresh Postgres database is always created
+    from the current models via create_all, so there are no legacy columns to
+    backfill there.
     """
+    if not SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+        return
+
     with engine.connect() as conn:
         existing_columns = {
             row[1] for row in conn.exec_driver_sql("PRAGMA table_info(adventures)")

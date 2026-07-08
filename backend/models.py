@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship
@@ -21,7 +21,9 @@ class Adventure(Base):
     # migrated via ALTER TABLE, where SQLite's ALTER syntax can't attach a
     # CURRENT_TIMESTAMP default to the column; `server_default` handles inserts
     # from outside the ORM on freshly created tables.
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow, server_default=func.now())
+    created_at = Column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), server_default=func.now()
+    )
     location_name = Column(String, nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
@@ -71,4 +73,6 @@ class UserProfile(Base):
     nickname = Column(String, nullable=True)
     country_code = Column(String, nullable=True)
     photo_url = Column(String, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow, server_default=func.now())
+    created_at = Column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), server_default=func.now()
+    )

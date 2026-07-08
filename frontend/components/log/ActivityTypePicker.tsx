@@ -9,6 +9,7 @@ import {
   FIELD_PADDING_VERTICAL,
   FIELD_RADIUS,
 } from "../../constants/fieldStyle";
+import { colors, radius, spacing, typography } from "../../constants/theme";
 import { ActivityType } from "../../types/adventure";
 
 const OPTIONS: { value: ActivityType; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -30,10 +31,10 @@ export default function ActivityTypePicker({ value, onChange }: ActivityTypePick
       <Text style={styles.label}>Activity Type</Text>
       <Pressable style={styles.field} onPress={() => setIsOpen(true)}>
         <View style={styles.selectedIconBadge}>
-          <Ionicons name={selected.icon} size={16} color="#0B3D91" />
+          <Ionicons name={selected.icon} size={16} color={colors.primary} />
         </View>
         <Text style={styles.selectedText}>{selected.label}</Text>
-        <Ionicons name="chevron-down" size={18} color="#5A6B87" />
+        <Ionicons name="chevron-down" size={18} color={colors.text.secondary} />
       </Pressable>
 
       <Modal visible={isOpen} transparent animationType="fade" onRequestClose={() => setIsOpen(false)}>
@@ -53,13 +54,18 @@ export default function ActivityTypePicker({ value, onChange }: ActivityTypePick
                   <Ionicons
                     name={option.icon}
                     size={18}
-                    color={isSelected ? "#FFFFFF" : "#0B3D91"}
+                    color={isSelected ? colors.text.inverse : colors.primary}
                   />
                   <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
                     {option.label}
                   </Text>
                   {isSelected && (
-                    <Ionicons name="checkmark" size={18} color="#FFFFFF" style={styles.checkmark} />
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={colors.text.inverse}
+                      style={styles.checkmark}
+                    />
                   )}
                 </Pressable>
               );
@@ -73,18 +79,18 @@ export default function ActivityTypePicker({ value, onChange }: ActivityTypePick
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 18,
+    marginBottom: spacing.lg,
   },
   label: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#344054",
-    marginBottom: 8,
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.label,
+    marginBottom: spacing.xs,
   },
   field: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing.sm,
     backgroundColor: FIELD_FILL,
     borderWidth: 1.5,
     borderColor: FIELD_BORDER,
@@ -95,52 +101,52 @@ const styles = StyleSheet.create({
   selectedIconBadge: {
     width: 26,
     height: 26,
-    borderRadius: 13,
-    backgroundColor: "#EAF6FA",
+    borderRadius: radius.full,
+    backgroundColor: colors.surface.tint,
     alignItems: "center",
     justifyContent: "center",
   },
   selectedText: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#101828",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.primary,
   },
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   menu: {
     width: "100%",
     maxWidth: 320,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 8,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.xl,
+    padding: spacing.xs,
   },
   option: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
   },
   optionSelected: {
-    backgroundColor: "#0B3D91",
+    backgroundColor: colors.primary,
   },
   optionText: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#101828",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.primary,
   },
   optionTextSelected: {
-    color: "#FFFFFF",
+    color: colors.text.inverse,
   },
   checkmark: {
-    marginLeft: 6,
+    marginLeft: spacing.xs,
   },
 });

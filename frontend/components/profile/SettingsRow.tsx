@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { colors, radius, spacing, typography, withOpacity } from "../../constants/theme";
+
 interface SettingsRowProps {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
@@ -27,7 +29,7 @@ export default function SettingsRow({
       disabled={!onPress}
     >
       <View style={[styles.iconBadge, highlighted && styles.iconBadgeHighlighted]}>
-        <Ionicons name={icon} size={17} color={highlighted ? "#FFFFFF" : "#0B3D5C"} />
+        <Ionicons name={icon} size={17} color={highlighted ? colors.text.inverse : colors.secondary} />
       </View>
       <View style={styles.textWrap}>
         <Text style={[styles.label, highlighted && styles.labelHighlighted]}>{label}</Text>
@@ -42,7 +44,7 @@ export default function SettingsRow({
           <Ionicons
             name="chevron-forward"
             size={18}
-            color={highlighted ? "rgba(255,255,255,0.8)" : "#94A3B8"}
+            color={highlighted ? withOpacity(colors.text.inverse, 0.8) : colors.text.tertiary}
           />
         ) : null
       )}
@@ -54,43 +56,43 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 12,
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
   },
   rowHighlighted: {
-    backgroundColor: "#0B3D91",
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    marginVertical: 2,
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.sm,
+    marginVertical: spacing.xxs,
   },
   iconBadge: {
     width: 34,
     height: 34,
-    borderRadius: 17,
-    backgroundColor: "#EAF6FA",
+    borderRadius: radius.full,
+    backgroundColor: colors.surface.tint,
     alignItems: "center",
     justifyContent: "center",
   },
   iconBadgeHighlighted: {
-    backgroundColor: "rgba(255,255,255,0.18)",
+    backgroundColor: withOpacity(colors.surface.card, 0.18),
   },
   textWrap: {
     flex: 1,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#101828",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
   },
   labelHighlighted: {
-    color: "#FFFFFF",
+    color: colors.text.inverse,
   },
   subtext: {
-    fontSize: 12,
-    color: "#94A3B8",
-    marginTop: 2,
+    fontSize: typography.size.small,
+    color: colors.text.tertiary,
+    marginTop: spacing.xxs,
   },
   subtextHighlighted: {
-    color: "rgba(255,255,255,0.75)",
+    color: withOpacity(colors.text.inverse, 0.75),
   },
 });

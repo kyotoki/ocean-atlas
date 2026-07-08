@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { colors, radius, spacing, typography } from "../../constants/theme";
 import { countryCodeToFlag, COUNTRIES } from "../../utils/countries";
 import { showAlert } from "../../utils/crossPlatformAlert";
 import { LocalProfileFields } from "../../utils/profileStorage";
@@ -61,7 +62,7 @@ export default function EditProfileModal({
           <View style={styles.headerRow}>
             <Text style={styles.title}>Edit Profile</Text>
             <Pressable onPress={handleClose} hitSlop={10}>
-              <Ionicons name="close" size={20} color="#5A6B87" />
+              <Ionicons name="close" size={20} color={colors.text.secondary} />
             </Pressable>
           </View>
 
@@ -70,14 +71,14 @@ export default function EditProfileModal({
             <TextInput
               style={[styles.input, styles.halfInput]}
               placeholder="First name"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={colors.text.muted}
               value={firstName}
               onChangeText={setFirstName}
             />
             <TextInput
               style={[styles.input, styles.halfInput]}
               placeholder="Last name"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={colors.text.muted}
               value={lastName}
               onChangeText={setLastName}
             />
@@ -97,7 +98,7 @@ export default function EditProfileModal({
           <TextInput
             style={[styles.input, styles.bioInput]}
             placeholder="Add a short bio about your diving journey..."
-            placeholderTextColor="#A0AEC0"
+            placeholderTextColor={colors.text.muted}
             value={bioDraft}
             onChangeText={setBioDraft}
             multiline
@@ -115,7 +116,12 @@ export default function EditProfileModal({
             ) : (
               <Text style={styles.countryPlaceholder}>Select your home country</Text>
             )}
-            <Ionicons name="chevron-forward" size={16} color="#94A3B8" style={styles.countryChevron} />
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={colors.text.tertiary}
+              style={styles.countryChevron}
+            />
           </Pressable>
 
           <Pressable
@@ -140,114 +146,114 @@ export default function EditProfileModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   card: {
     width: "100%",
     maxWidth: 380,
     maxHeight: "85%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 18,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   title: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#101828",
+    fontSize: typography.size.subtitle,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
   },
   label: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#94A3B8",
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    color: colors.text.tertiary,
     letterSpacing: 0.8,
-    marginBottom: 6,
-    marginTop: 12,
+    marginBottom: spacing.xs,
+    marginTop: spacing.sm,
   },
   row: {
     flexDirection: "row",
-    gap: 10,
+    gap: spacing.sm,
   },
   halfInput: {
     flex: 1,
   },
   input: {
-    backgroundColor: "#F2F6FC",
+    backgroundColor: colors.surface.page,
     borderWidth: 1,
-    borderColor: "#D0D9E6",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#101828",
+    borderColor: colors.border.strong,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    fontSize: typography.size.body,
+    color: colors.text.primary,
   },
   bioInput: {
     minHeight: 70,
     textAlignVertical: "top",
   },
   readOnlyField: {
-    backgroundColor: "#F2F6FC",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: colors.surface.page,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
   },
   readOnlyText: {
-    fontSize: 14,
-    color: "#5A6B87",
+    fontSize: typography.size.body,
+    color: colors.text.secondary,
   },
   helperText: {
-    fontSize: 11,
-    color: "#94A3B8",
-    marginTop: 4,
+    fontSize: typography.size.caption,
+    color: colors.text.tertiary,
+    marginTop: spacing.xxs,
     fontStyle: "italic",
   },
   countryRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: "#F2F6FC",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    gap: spacing.xs,
+    backgroundColor: colors.surface.page,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
   },
   flag: {
-    fontSize: 18,
+    fontSize: typography.size.subtitle,
   },
   countryName: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#344054",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.label,
     flex: 1,
   },
   countryPlaceholder: {
-    fontSize: 14,
-    color: "#94A3B8",
+    fontSize: typography.size.body,
+    color: colors.text.tertiary,
     flex: 1,
   },
   countryChevron: {
     marginLeft: "auto",
   },
   saveButton: {
-    marginTop: 18,
-    backgroundColor: "#0B3D91",
-    borderRadius: 12,
-    paddingVertical: 13,
+    marginTop: spacing.lg,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
     alignItems: "center",
   },
   saveButtonDisabled: {
     opacity: 0.6,
   },
   saveButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
+    color: colors.text.inverse,
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
   },
 });

@@ -11,6 +11,8 @@ import {
   View,
 } from "react-native";
 
+import { colors, radius, spacing, typography, withOpacity } from "../../constants/theme";
+
 interface PhotoCarouselProps {
   photos: string[];
   height: number;
@@ -36,7 +38,7 @@ export default function PhotoCarousel({ photos, height }: PhotoCarouselProps) {
   if (photos.length === 0) {
     return (
       <View style={[styles.photo, styles.photoPlaceholder, { height }]}>
-        <Ionicons name="image-outline" size={32} color="#94A3B8" />
+        <Ionicons name="image-outline" size={32} color={colors.text.tertiary} />
         <Text style={styles.photoPlaceholderText}>No photo added</Text>
       </View>
     );
@@ -58,7 +60,7 @@ export default function PhotoCarousel({ photos, height }: PhotoCarouselProps) {
                 key={url}
                 style={[styles.photo, styles.photoPlaceholder, { width: containerWidth, height }]}
               >
-                <Ionicons name="image-outline" size={32} color="#94A3B8" />
+                <Ionicons name="image-outline" size={32} color={colors.text.tertiary} />
                 <Text style={styles.photoPlaceholderText}>Photo unavailable</Text>
               </View>
             ) : (
@@ -92,30 +94,30 @@ const styles = StyleSheet.create({
   photoPlaceholder: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
+    gap: spacing.xs,
   },
   photoPlaceholderText: {
-    fontSize: 13,
-    color: "#94A3B8",
-    fontWeight: "600",
+    fontSize: typography.size.small,
+    color: colors.text.tertiary,
+    fontWeight: typography.weight.semibold,
   },
   dotsRow: {
     position: "absolute",
-    bottom: 10,
+    bottom: spacing.sm,
     left: 0,
     right: 0,
     flexDirection: "row",
     justifyContent: "center",
-    gap: 6,
+    gap: spacing.xs,
   },
   dot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.5)",
+    borderRadius: radius.full,
+    backgroundColor: withOpacity(colors.surface.card, 0.5),
   },
   dotActive: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface.card,
     width: 16,
   },
 });

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { colors, radius, spacing, typography, withOpacity } from "../../constants/theme";
 import { Achievement } from "../../utils/achievements";
 
 interface AchievementDetailModalProps {
@@ -26,7 +27,7 @@ export default function AchievementDetailModal({
             style={[
               styles.iconCircle,
               unlocked
-                ? { backgroundColor: `${color}1F`, borderColor: color, shadowColor: color }
+                ? { backgroundColor: withOpacity(color, 0.12), borderColor: color, shadowColor: color }
                 : styles.iconCircleLocked,
             ]}
           >
@@ -39,7 +40,7 @@ export default function AchievementDetailModal({
             <Ionicons
               name={unlocked ? "checkmark-circle" : "lock-closed"}
               size={13}
-              color={unlocked ? "#1B8A5A" : "#5A6B87"}
+              color={unlocked ? colors.success : colors.text.secondary}
             />
             <Text style={[styles.statusText, unlocked ? styles.statusTextUnlocked : styles.statusTextLocked]}>
               {unlocked ? "Unlocked" : "Locked"}
@@ -60,92 +61,93 @@ export default function AchievementDetailModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   card: {
     width: "100%",
     maxWidth: 320,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 22,
-    paddingVertical: 24,
-    paddingHorizontal: 22,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.xxl,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.xl,
     alignItems: "center",
   },
   iconCircle: {
     width: 76,
     height: 76,
-    borderRadius: 38,
+    borderRadius: radius.full,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
+    // One-off glow shadow - color is dynamic (per achievement).
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.55,
     shadowRadius: 12,
     elevation: 6,
-    marginBottom: 14,
+    marginBottom: spacing.md,
   },
   iconCircleLocked: {
-    backgroundColor: "#F2F6FC",
-    borderColor: "#E2E8F0",
+    backgroundColor: colors.surface.page,
+    borderColor: colors.border.default,
   },
   emoji: {
-    fontSize: 34,
+    fontSize: typography.size.display,
   },
   emojiLocked: {
     opacity: 0.55,
   },
   name: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#101828",
+    fontSize: typography.size.subtitle,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
     textAlign: "center",
   },
   statusPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginTop: 8,
-    marginBottom: 14,
+    gap: spacing.xxs,
+    borderRadius: radius.xl,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
   },
   statusPillUnlocked: {
-    backgroundColor: "#E6F4EC",
+    backgroundColor: colors.successTint,
   },
   statusPillLocked: {
-    backgroundColor: "#F2F6FC",
+    backgroundColor: colors.surface.page,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.bold,
   },
   statusTextUnlocked: {
-    color: "#1B8A5A",
+    color: colors.success,
   },
   statusTextLocked: {
-    color: "#5A6B87",
+    color: colors.text.secondary,
   },
   description: {
-    fontSize: 14,
-    color: "#344054",
+    fontSize: typography.size.body,
+    color: colors.text.label,
     textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 18,
+    lineHeight: typography.lineHeight.body,
+    marginBottom: spacing.lg,
   },
   closeButton: {
     alignSelf: "stretch",
-    backgroundColor: "#0B3D91",
-    borderRadius: 12,
-    paddingVertical: 13,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
     alignItems: "center",
   },
   closeButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
+    color: colors.text.inverse,
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
   },
 });

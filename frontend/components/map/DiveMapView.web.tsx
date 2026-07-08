@@ -5,12 +5,12 @@ import { useEffect } from "react";
 import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import { View } from "react-native";
 
+import { colors, radius, spacing, typography, withOpacity } from "../../constants/theme";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { Adventure } from "../../types/adventure";
 import { formatConditionsBadge } from "../../utils/mapConditions";
+import { DIVE_PIN_CYAN, DIVE_PIN_DEEP } from "./CyanDivePin";
 
-const DIVE_PIN_CYAN = "#06B6D4";
-const DIVE_PIN_DEEP = "#0B3D5C";
 const WORLD_CENTER: [number, number] = [10, 0];
 const WORLD_ZOOM = 2;
 
@@ -25,10 +25,10 @@ function buildDiveIcon(badgeText?: string) {
   const totalHeight = PIN_HEIGHT + (badgeText ? BADGE_HEIGHT : 0);
   const badgeHtml = badgeText
     ? `<div style="
-        background:${DIVE_PIN_DEEP};color:#FFFFFF;font-size:10px;font-weight:800;
-        letter-spacing:0.2px;white-space:nowrap;border-radius:8px;
-        border:1px solid rgba(255,255,255,0.5);padding:2px 6px;margin-bottom:4px;
-        box-shadow:0 2px 3px rgba(2,16,25,0.4);
+        background:${DIVE_PIN_DEEP};color:${colors.text.inverse};font-size:${typography.size.caption}px;font-weight:${typography.weight.bold};
+        letter-spacing:0.2px;white-space:nowrap;border-radius:${radius.sm}px;
+        border:1px solid ${withOpacity(colors.surface.card, 0.5)};padding:${spacing.xxs}px ${spacing.xs}px;margin-bottom:${spacing.xxs}px;
+        box-shadow:0 2px 3px ${colors.overlay.scrimMedium};
       ">${badgeText}</div>`
     : "";
 
@@ -40,15 +40,15 @@ function buildDiveIcon(badgeText?: string) {
         <div style="display:flex;flex-direction:column;align-items:center;position:relative;">
           <div style="
             position:absolute;top:-5px;width:38px;height:38px;border-radius:50%;
-            background:rgba(6, 182, 212, 0.25);
+            background:${withOpacity(colors.accent, 0.25)};
           "></div>
           <div style="
             width:28px;height:28px;border-radius:50%;
             background:linear-gradient(135deg, ${DIVE_PIN_CYAN}, ${DIVE_PIN_DEEP});
-            border:2px solid #FFFFFF;
+            border:2px solid ${colors.surface.card};
             display:flex;align-items:center;justify-content:center;
-            box-shadow:0 3px 6px rgba(2, 16, 25, 0.4);
-            font-size:13px;line-height:1;
+            box-shadow:0 3px 6px ${colors.overlay.scrimMedium};
+            font-size:${typography.size.small}px;line-height:1;
           ">🤿</div>
           <div style="
             width:0;height:0;

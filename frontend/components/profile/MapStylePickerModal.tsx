@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, Pressable, StyleSheet, Text } from "react-native";
 
+import { colors, radius, spacing, typography } from "../../constants/theme";
 import { MapStyle } from "../../contexts/PreferencesContext";
 
 const OPTIONS: { value: MapStyle; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -41,13 +42,18 @@ export default function MapStylePickerModal({
                 <Ionicons
                   name={option.icon}
                   size={18}
-                  color={isSelected ? "#FFFFFF" : "#0B3D91"}
+                  color={isSelected ? colors.text.inverse : colors.primary}
                 />
                 <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
                   {option.label}
                 </Text>
                 {isSelected && (
-                  <Ionicons name="checkmark" size={18} color="#FFFFFF" style={styles.checkmark} />
+                  <Ionicons
+                    name="checkmark"
+                    size={18}
+                    color={colors.text.inverse}
+                    style={styles.checkmark}
+                  />
                 )}
               </Pressable>
             );
@@ -61,48 +67,48 @@ export default function MapStylePickerModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   menu: {
     width: "100%",
     maxWidth: 320,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 8,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.xl,
+    padding: spacing.xs,
   },
   title: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#94A3B8",
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.bold,
+    color: colors.text.tertiary,
     letterSpacing: 0.6,
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 4,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxs,
   },
   option: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
   },
   optionSelected: {
-    backgroundColor: "#0B3D91",
+    backgroundColor: colors.primary,
   },
   optionText: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#101828",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.primary,
   },
   optionTextSelected: {
-    color: "#FFFFFF",
+    color: colors.text.inverse,
   },
   checkmark: {
-    marginLeft: 6,
+    marginLeft: spacing.xs,
   },
 });

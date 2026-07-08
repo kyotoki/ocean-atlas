@@ -1,0 +1,83 @@
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+
+import { colors, radius, spacing, typography } from "../../constants/theme";
+import { Adventure } from "../../types/adventure";
+import AccordionSection from "./AccordionSection";
+
+interface MediaGallerySectionProps {
+  recentPhotos: Adventure[];
+}
+
+export default function MediaGallerySection({ recentPhotos }: MediaGallerySectionProps) {
+  return (
+    <AccordionSection title="Media & Milestone Gallery" icon="images-outline">
+      <Text style={styles.subLabel}>RECENT PHOTOS</Text>
+      {recentPhotos.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.photoRow}
+        >
+          {recentPhotos.map((adventure) => (
+            <View key={adventure.id} style={styles.photoThumbWrap}>
+              <Image source={{ uri: adventure.photos[0] }} style={styles.photoThumb} />
+              <View style={styles.photoDurationPill}>
+                <Text style={styles.photoDurationPillText}>⏱️ {adventure.duration_minutes}m</Text>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      ) : (
+        <Text style={styles.emptyGalleryText}>
+          No photos yet. Add one next time you log an adventure.
+        </Text>
+      )}
+    </AccordionSection>
+  );
+}
+
+const styles = StyleSheet.create({
+  subLabel: {
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    color: colors.text.tertiary,
+    letterSpacing: 0.8,
+    marginBottom: spacing.sm,
+  },
+  photoRow: {
+    gap: spacing.sm,
+  },
+  photoThumbWrap: {
+    position: "relative",
+    // Without this, the wrapper stretches to the horizontal ScrollView row's
+    // full cross-axis height (flexbox's default alignItems: "stretch"),
+    // so the pill's `bottom` would anchor to that stretched height instead
+    // of the 90px-tall image actually visible inside it.
+    alignSelf: "flex-start",
+  },
+  photoThumb: {
+    width: 90,
+    height: 90,
+    borderRadius: radius.md,
+    backgroundColor: colors.border.default,
+  },
+  photoDurationPill: {
+    position: "absolute",
+    bottom: spacing.xs,
+    left: spacing.xs,
+    backgroundColor: colors.overlay.scrimStrong,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
+  },
+  photoDurationPillText: {
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    color: colors.text.inverse,
+  },
+  emptyGalleryText: {
+    fontSize: typography.size.small,
+    color: colors.text.tertiary,
+    fontStyle: "italic",
+  },
+});

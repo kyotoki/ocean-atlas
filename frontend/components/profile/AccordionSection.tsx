@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { ReactNode, useRef, useState } from "react";
 import { Animated, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { colors, elevation, radius, spacing, typography } from "../../constants/theme";
+
 interface AccordionSectionProps {
   title: string;
   icon: keyof typeof Ionicons.glyphMap;
@@ -63,12 +65,12 @@ export default function AccordionSection({
       <Pressable onPress={toggle} style={styles.header} hitSlop={4}>
         <View style={styles.headerLeft}>
           <View style={styles.iconBadge}>
-            <Ionicons name={icon} size={16} color="#0B3D5C" />
+            <Ionicons name={icon} size={16} color={colors.secondary} />
           </View>
           <Text style={styles.title}>{title}</Text>
         </View>
         <Animated.View style={{ transform: [{ rotate }] }}>
-          <Ionicons name="chevron-down" size={18} color="#5A6B87" />
+          <Ionicons name="chevron-down" size={18} color={colors.text.secondary} />
         </Animated.View>
       </Pressable>
 
@@ -83,48 +85,44 @@ export default function AccordionSection({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    marginHorizontal: 16,
-    marginBottom: 14,
-    shadowColor: "#021019",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.lg,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    ...elevation.card,
     overflow: "hidden",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
   },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing.sm,
   },
   iconBadge: {
     width: 30,
     height: 30,
-    borderRadius: 15,
-    backgroundColor: "#EAF6FA",
+    borderRadius: radius.full,
+    backgroundColor: colors.surface.tint,
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#101828",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
   },
   contentMeasure: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
   },
 });

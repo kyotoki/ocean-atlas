@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AdventureDetailModal from "../../components/map/AdventureDetailModal";
 import DiveMapView from "../../components/map/DiveMapView";
 import MapSkeleton from "../../components/map/MapSkeleton";
+import PendingSyncBadge from "../../components/ui/PendingSyncBadge";
 import WaveSpinner from "../../components/ui/WaveSpinner";
 import { ENDPOINTS } from "../../constants/api";
 import { TAB_BAR_HEIGHT } from "../../constants/layout";
@@ -119,10 +120,13 @@ export default function OceanMapScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <View style={styles.summaryBar}>
-        <Text style={styles.summaryText}>
-          {adventures.length}{" "}
-          {adventures.length === 1 ? "adventure" : "adventures"} logged
-        </Text>
+        <View style={styles.summaryTextGroup}>
+          <Text style={styles.summaryText}>
+            {adventures.length}{" "}
+            {adventures.length === 1 ? "adventure" : "adventures"} logged
+          </Text>
+          <PendingSyncBadge />
+        </View>
         <Pressable
           onPress={() => fetchAdventures(true)}
           disabled={isRefreshing}
@@ -198,6 +202,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E2E8F0",
+  },
+  summaryTextGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 1,
   },
   summaryText: {
     fontSize: 13,

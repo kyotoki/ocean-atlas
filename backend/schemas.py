@@ -1,5 +1,5 @@
-from datetime import datetime
-from typing import Literal, Optional
+from datetime import datetime, timezone
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -18,9 +18,19 @@ class AdventureBase(BaseModel):
     # rows rather than plain strings, so the before-validator below flattens
     # either shape down to a list of URL strings.
     photos: list[str] = Field(default_factory=list)
-    activity_type: Literal["scuba", "snorkeling"] = "scuba"
+    # Open string rather than a closed enum: new activity types (fishing,
+    # boating, surfing, ...) can be added later purely from the frontend/data
+    # side, with no backend schema change required.
+    activity_type: str = Field("scuba", min_length=1, max_length=30)
     tank_pressure_bar: Optional[float] = Field(None, ge=0)
     gas_mix: Optional[str] = Field(None, max_length=50)
+
+    @field_validator("activity_type", mode="before")
+    @classmethod
+    def normalize_activity_type(cls, value):
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
 
     @field_validator("tank_pressure_bar", "gas_mix", mode="before")
     @classmethod
@@ -40,7 +50,7 @@ class AdventureBase(BaseModel):
 class AdventureCreate(AdventureBase):
     # Defaults to today so direct API callers that omit it still get a sane
     # value - the frontend always sends its own explicitly selected date.
-    date: str = Field(default_factory=lambda: datetime.utcnow().date().isoformat())
+    date: str = Field(default_factory=lambda: datetime.now(timezone.utc).date().isoformat())
 
     @field_validator("date")
     @classmethod
@@ -82,7 +92,7 @@ class DiveStats(BaseModel):
 
 
 class ActivityStats(BaseModel):
-    activity_type: Literal["scuba", "snorkeling"]
+    activity_type: str
     total_trips: int
     total_minutes: int
     deepest_meters: Optional[float] = None

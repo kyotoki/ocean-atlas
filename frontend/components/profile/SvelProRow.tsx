@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { colors, radius, spacing, typography, withOpacity } from "../../constants/theme";
+
 interface SvelProRowProps {
   onPress: () => void;
 }
@@ -10,13 +12,13 @@ export default function SvelProRow({ onPress }: SvelProRowProps) {
   return (
     <Pressable onPress={onPress} style={styles.wrap}>
       <LinearGradient
-        colors={["#0B3D5C", "#3E2E05", "#8A6300"]}
+        colors={[colors.secondary, colors.premiumTextStrong, colors.premiumText]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
         <View style={styles.iconBadge}>
-          <Ionicons name="star" size={17} color="#FFD873" />
+          <Ionicons name="star" size={17} color={colors.premium} />
         </View>
         <View style={styles.textWrap}>
           <Text style={styles.label}>Svel Pro Membership</Text>
@@ -32,10 +34,12 @@ export default function SvelProRow({ onPress }: SvelProRowProps) {
 
 const styles = StyleSheet.create({
   wrap: {
-    borderRadius: 14,
+    borderRadius: radius.lg,
     overflow: "hidden",
-    marginVertical: 4,
-    shadowColor: "#8A6300",
+    marginVertical: spacing.xxs,
+    // One-off glow shadow tied to the premium gold color - doesn't match any
+    // standard elevation preset.
+    shadowColor: colors.premiumText,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 10,
@@ -44,17 +48,17 @@ const styles = StyleSheet.create({
   gradient: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   iconBadge: {
     width: 34,
     height: 34,
-    borderRadius: 17,
-    backgroundColor: "rgba(255, 216, 115, 0.18)",
+    borderRadius: radius.full,
+    backgroundColor: withOpacity(colors.premium, 0.18),
     borderWidth: 1,
-    borderColor: "rgba(255, 216, 115, 0.4)",
+    borderColor: withOpacity(colors.premium, 0.4),
     alignItems: "center",
     justifyContent: "center",
   },
@@ -62,27 +66,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#FFFFFF",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
+    color: colors.text.inverse,
     letterSpacing: 0.2,
   },
   subtext: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "rgba(255, 232, 189, 0.85)",
-    marginTop: 2,
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.semibold,
+    color: withOpacity(colors.premiumTextOnDark, 0.85),
+    marginTop: spacing.xxs,
   },
   proBadge: {
-    backgroundColor: "#FFD873",
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: colors.premium,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
   },
   proBadgeText: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#3E2E05",
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    color: colors.premiumTextStrong,
     letterSpacing: 0.6,
   },
 });

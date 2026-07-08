@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRef } from "react";
 import { Animated, Pressable, StyleSheet } from "react-native";
 
+import { colors, radius, withOpacity } from "../../constants/theme";
+
 interface SettingsCogButtonProps {
   onPress: () => void;
 }
@@ -29,7 +31,7 @@ export default function SettingsCogButton({ onPress }: SettingsCogButtonProps) {
         accessibilityRole="button"
         accessibilityLabel="Open settings"
       >
-        <Ionicons name="settings-outline" size={20} color="#FFFFFF" />
+        <Ionicons name="settings-outline" size={20} color={colors.text.inverse} />
       </Pressable>
     </Animated.View>
   );
@@ -39,10 +41,10 @@ const styles = StyleSheet.create({
   button: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.14)",
+    borderRadius: radius.full,
+    backgroundColor: withOpacity(colors.surface.card, 0.14),
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.22)",
+    borderColor: withOpacity(colors.surface.card, 0.22),
     alignItems: "center",
     justifyContent: "center",
   },

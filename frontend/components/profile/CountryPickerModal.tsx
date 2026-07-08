@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { colors, radius, spacing, typography } from "../../constants/theme";
 import { COUNTRIES, countryCodeToFlag } from "../../utils/countries";
 
 interface CountryPickerModalProps {
@@ -28,14 +29,14 @@ export default function CountryPickerModal({ visible, onClose, onSelect }: Count
           <View style={styles.headerRow}>
             <Text style={styles.title}>Home Country</Text>
             <Pressable onPress={onClose} hitSlop={10}>
-              <Ionicons name="close" size={20} color="#5A6B87" />
+              <Ionicons name="close" size={20} color={colors.text.secondary} />
             </Pressable>
           </View>
 
           <TextInput
             style={styles.search}
             placeholder="Search countries..."
-            placeholderTextColor="#A0AEC0"
+            placeholderTextColor={colors.text.muted}
             value={query}
             onChangeText={setQuery}
             autoCorrect={false}
@@ -70,40 +71,40 @@ export default function CountryPickerModal({ visible, onClose, onSelect }: Count
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   card: {
     width: "100%",
     maxWidth: 360,
     maxHeight: "70%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 18,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   title: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#101828",
+    fontSize: typography.size.subtitle,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
   },
   search: {
-    backgroundColor: "#F2F6FC",
+    backgroundColor: colors.surface.page,
     borderWidth: 1,
-    borderColor: "#D0D9E6",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#101828",
-    marginBottom: 10,
+    borderColor: colors.border.strong,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    fontSize: typography.size.body,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
   },
   list: {
     flexGrow: 0,
@@ -111,23 +112,23 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "#F2F6FC",
+    borderBottomColor: colors.surface.page,
   },
   flag: {
-    fontSize: 22,
+    fontSize: typography.size.headline,
   },
   countryName: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#344054",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.label,
   },
   emptyText: {
-    fontSize: 13,
-    color: "#94A3B8",
+    fontSize: typography.size.small,
+    color: colors.text.tertiary,
     textAlign: "center",
-    paddingVertical: 20,
+    paddingVertical: spacing.xl,
   },
 });

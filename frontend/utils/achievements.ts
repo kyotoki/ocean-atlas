@@ -1,3 +1,4 @@
+import { colors } from "../constants/theme";
 import { Adventure } from "../types/adventure";
 import { GearItem } from "./profileStorage";
 
@@ -17,12 +18,12 @@ export interface AchievementGroups {
   global: Achievement[];
 }
 
-const SCUBA_COLOR = "#0B3D91";
-const SNORKEL_COLOR = "#06B6D4";
-const CERT_COLOR = "#B8860B";
-const GLOBETROTTER_COLOR = "#1B8A5A";
-const NIGHT_OWL_COLOR = "#5B3E96";
-const GEAR_GURU_COLOR = "#B0472B";
+const SCUBA_COLOR = colors.achievement.scuba;
+const SNORKEL_COLOR = colors.achievement.snorkel;
+const CERT_COLOR = colors.achievement.certification;
+const GLOBETROTTER_COLOR = colors.achievement.globetrotter;
+const NIGHT_OWL_COLOR = colors.achievement.nightOwl;
+const GEAR_GURU_COLOR = colors.achievement.gearGuru;
 
 function scubaEmoji(threshold: number): string {
   switch (threshold) {

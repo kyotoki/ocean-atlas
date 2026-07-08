@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "oceanatlas",
+    "scheme": "svel",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.oceanatlas.app"
+      "bundleIdentifier": "com.svel.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0B3D91"
       },
-      "package": "com.oceanatlas.app"
+      "package": "com.svel.app"
     },
     "web": {
       "bundler": "metro",

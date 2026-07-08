@@ -1,12 +1,11 @@
 import io
-import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, status
 from PIL import Image, UnidentifiedImageError
 from pillow_heif import register_heif_opener
 
 from auth import get_current_user_id
-from storage import ALLOWED_CONTENT_TYPES, MAX_UPLOAD_BYTES, UPLOAD_ROOT
+from storage import ALLOWED_CONTENT_TYPES, MAX_UPLOAD_BYTES, save_photo
 
 register_heif_opener()
 
@@ -45,10 +44,8 @@ async def upload_photo(
     except UnidentifiedImageError:
         raise HTTPException(status_code=400, detail="File is not a valid image.")
 
-    user_dir = UPLOAD_ROOT / user_id
-    user_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"{uuid.uuid4().hex}.jpg"
-    image.convert("RGB").save(user_dir / filename, format="JPEG", quality=85)
+    buffer = io.BytesIO()
+    image.convert("RGB").save(buffer, format="JPEG", quality=85)
 
-    photo_url = f"{str(request.base_url).rstrip('/')}/uploads/{user_id}/{filename}"
+    photo_url = save_photo(user_id, buffer.getvalue(), base_url=str(request.base_url))
     return {"url": photo_url}

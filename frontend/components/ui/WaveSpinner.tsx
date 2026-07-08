@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 
-const DIVE_CYAN = "#06B6D4";
+import { colors, radius, spacing } from "../../constants/theme";
 
 interface WaveSpinnerProps {
   size?: "small" | "large";
@@ -10,9 +10,9 @@ interface WaveSpinnerProps {
 
 const DOT_COUNT = 3;
 
-export default function WaveSpinner({ size = "large", color = DIVE_CYAN }: WaveSpinnerProps) {
+export default function WaveSpinner({ size = "large", color = colors.accent }: WaveSpinnerProps) {
   const dotSize = size === "small" ? 6 : 10;
-  const gap = size === "small" ? 5 : 8;
+  const gap = size === "small" ? spacing.xxs : spacing.xs;
   const values = useRef(
     Array.from({ length: DOT_COUNT }, () => new Animated.Value(0))
   ).current;
@@ -54,7 +54,7 @@ export default function WaveSpinner({ size = "large", color = DIVE_CYAN }: WaveS
             {
               width: dotSize,
               height: dotSize,
-              borderRadius: dotSize / 2,
+              borderRadius: radius.full,
               backgroundColor: color,
               opacity: value.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }),
               transform: [

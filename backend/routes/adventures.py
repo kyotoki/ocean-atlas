@@ -1,8 +1,6 @@
-import os
 from typing import List
-from urllib.parse import urlparse
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 import models
@@ -10,9 +8,11 @@ import schemas
 from auth import get_current_user_id
 from database import get_db
 from marine_weather import fetch_marine_conditions
-from storage import UPLOAD_ROOT
+from storage import delete_photo
 
 router = APIRouter(prefix="/adventures", tags=["adventures"])
+
+MAX_PAGE_SIZE = 100
 
 
 def _effective_date(adventure: models.Adventure) -> str:
@@ -22,6 +22,8 @@ def _effective_date(adventure: models.Adventure) -> str:
 
 @router.get("/", response_model=List[schemas.Adventure])
 def list_adventures(
+    limit: int = Query(50, ge=1, le=MAX_PAGE_SIZE),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -32,9 +34,10 @@ def list_adventures(
         .all()
     )
     # Sort chronologically by the adventure's own date (Python's sort is
-    # stable, so the id-desc order above still breaks ties on the same date).
+    # stable, so the id-desc order above still breaks ties on the same date),
+    # then paginate in-memory since the sort key isn't a plain database column.
     adventures.sort(key=_effective_date, reverse=True)
-    return adventures
+    return adventures[offset : offset + limit]
 
 
 @router.get("/{adventure_id}", response_model=schemas.Adventure)
@@ -74,17 +77,6 @@ def create_adventure(
     return db_adventure
 
 
-def _remove_photo_file(url: str) -> None:
-    relative_path = urlparse(url).path.removeprefix("/uploads/")
-    photo_path = (UPLOAD_ROOT / relative_path).resolve()
-    # Confirm the resolved path still lands inside UPLOAD_ROOT before removing
-    # anything, since the url is stored data rather than a value we can fully
-    # trust to be a clean relative path. Missing files are skipped quietly
-    # rather than raising, since the file may already be gone.
-    if photo_path.is_relative_to(UPLOAD_ROOT.resolve()) and photo_path.is_file():
-        os.remove(photo_path)
-
-
 @router.delete("/{adventure_id}", status_code=204)
 def delete_adventure(
     adventure_id: int,
@@ -96,7 +88,7 @@ def delete_adventure(
         raise HTTPException(status_code=404, detail="Adventure not found")
 
     for photo in adventure.photos:
-        _remove_photo_file(photo.url)
+        delete_photo(photo.url)
 
     db.delete(adventure)
     db.commit()

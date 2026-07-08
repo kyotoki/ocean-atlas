@@ -1,8 +1,10 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 
-export const DIVE_PIN_CYAN = "#06B6D4";
-export const DIVE_PIN_DEEP = "#0B3D5C";
+import { colors, radius, spacing, typography, withOpacity } from "../../constants/theme";
+
+export const DIVE_PIN_CYAN = colors.accent;
+export const DIVE_PIN_DEEP = colors.secondary;
 
 interface CyanDivePinProps {
   badgeText?: string;
@@ -41,22 +43,24 @@ const styles = StyleSheet.create({
   badge: {
     backgroundColor: DIVE_PIN_DEEP,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.5)",
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginBottom: 4,
+    borderColor: withOpacity(colors.surface.card, 0.5),
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
+    marginBottom: spacing.xxs,
     maxWidth: 64,
-    shadowColor: "#021019",
+    // A small, one-off "pin badge" shadow that doesn't correspond to any of
+    // the standard elevation presets - only the color is shared with them.
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 4,
   },
   badgeText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "800",
+    color: colors.text.inverse,
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
     letterSpacing: 0.2,
   },
   pinBody: {
@@ -67,25 +71,26 @@ const styles = StyleSheet.create({
     top: -3,
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(6, 182, 212, 0.25)",
+    borderRadius: radius.full,
+    backgroundColor: withOpacity(colors.accent, 0.25),
   },
   circle: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: radius.full,
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: colors.surface.card,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#021019",
+    // Also a one-off shadow, distinct from the standard elevation presets.
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.35,
     shadowRadius: 4,
     elevation: 5,
   },
   emoji: {
-    fontSize: 15,
+    fontSize: typography.size.body,
     lineHeight: 17,
   },
   tail: {

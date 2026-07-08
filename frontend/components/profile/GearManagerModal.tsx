@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
+import { colors, radius, spacing, typography } from "../../constants/theme";
 import { Adventure } from "../../types/adventure";
 import { computeGearUsage } from "../../utils/gearUsage";
 import { GearItem } from "../../utils/profileStorage";
@@ -61,7 +62,7 @@ export default function GearManagerModal({
           <View style={styles.headerRow}>
             <Text style={styles.title}>Manage Equipment</Text>
             <Pressable onPress={onClose} hitSlop={10}>
-              <Ionicons name="close" size={20} color="#5A6B87" />
+              <Ionicons name="close" size={20} color={colors.text.secondary} />
             </Pressable>
           </View>
 
@@ -79,7 +80,7 @@ export default function GearManagerModal({
               return (
                 <View style={styles.gearRow}>
                   <View style={styles.gearIconBadge}>
-                    <Ionicons name={iconForType(item.type)} size={18} color="#0B3D5C" />
+                    <Ionicons name={iconForType(item.type)} size={18} color={colors.secondary} />
                   </View>
                   <View style={styles.gearInfo}>
                     <Text style={styles.gearName}>{item.name}</Text>
@@ -92,7 +93,7 @@ export default function GearManagerModal({
                     </Text>
                   </View>
                   <Pressable onPress={() => removeGear(item.id)} hitSlop={8}>
-                    <Ionicons name="trash-outline" size={18} color="#B00020" />
+                    <Ionicons name="trash-outline" size={18} color={colors.error} />
                   </Pressable>
                 </View>
               );
@@ -109,7 +110,11 @@ export default function GearManagerModal({
                   onPress={() => setTypeDraft(type.value)}
                   style={[styles.typeChip, selected && styles.typeChipSelected]}
                 >
-                  <Ionicons name={type.icon} size={14} color={selected ? "#FFFFFF" : "#0B3D5C"} />
+                  <Ionicons
+                    name={type.icon}
+                    size={14}
+                    color={selected ? colors.text.inverse : colors.secondary}
+                  />
                 </Pressable>
               );
             })}
@@ -118,13 +123,13 @@ export default function GearManagerModal({
             <TextInput
               style={styles.addInput}
               placeholder={`e.g. ${labelForType(typeDraft)} name`}
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={colors.text.muted}
               value={nameDraft}
               onChangeText={setNameDraft}
               onSubmitEditing={addGear}
             />
             <Pressable style={styles.addButton} onPress={addGear} hitSlop={8}>
-              <Ionicons name="add" size={20} color="#FFFFFF" />
+              <Ionicons name="add" size={20} color={colors.text.inverse} />
             </Pressable>
           </View>
         </Pressable>
@@ -136,53 +141,53 @@ export default function GearManagerModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   card: {
     width: "100%",
     maxWidth: 380,
     maxHeight: "80%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 18,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   title: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#101828",
+    fontSize: typography.size.subtitle,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
   },
   list: {
     flexGrow: 0,
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   emptyText: {
-    fontSize: 13,
-    color: "#94A3B8",
+    fontSize: typography.size.small,
+    color: colors.text.tertiary,
     textAlign: "center",
-    paddingVertical: 20,
+    paddingVertical: spacing.xl,
   },
   gearRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingVertical: 10,
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "#F2F6FC",
+    borderBottomColor: colors.surface.page,
   },
   gearIconBadge: {
     width: 34,
     height: 34,
-    borderRadius: 17,
-    backgroundColor: "#EAF6FA",
+    borderRadius: radius.full,
+    backgroundColor: colors.surface.tint,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -190,58 +195,58 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   gearName: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#101828",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
   },
   gearSubtext: {
-    fontSize: 12,
-    color: "#94A3B8",
-    marginTop: 2,
+    fontSize: typography.size.small,
+    color: colors.text.tertiary,
+    marginTop: spacing.xxs,
   },
   label: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#94A3B8",
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    color: colors.text.tertiary,
     letterSpacing: 0.8,
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   typeRow: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 10,
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
   typeChip: {
     width: 34,
     height: 34,
-    borderRadius: 17,
-    backgroundColor: "#EAF6FA",
+    borderRadius: radius.full,
+    backgroundColor: colors.surface.tint,
     alignItems: "center",
     justifyContent: "center",
   },
   typeChipSelected: {
-    backgroundColor: "#0B3D5C",
+    backgroundColor: colors.secondary,
   },
   addRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: spacing.xs,
   },
   addInput: {
     flex: 1,
-    backgroundColor: "#F2F6FC",
+    backgroundColor: colors.surface.page,
     borderWidth: 1,
-    borderColor: "#D0D9E6",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#101828",
+    borderColor: colors.border.strong,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    fontSize: typography.size.body,
+    color: colors.text.primary,
   },
   addButton: {
     width: 42,
     height: 42,
-    borderRadius: 10,
-    backgroundColor: "#0B3D91",
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },

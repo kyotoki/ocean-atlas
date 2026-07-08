@@ -13,6 +13,7 @@ import {
   FIELD_PADDING_VERTICAL,
   FIELD_RADIUS,
 } from "../../constants/fieldStyle";
+import { colors, radius, spacing, typography } from "../../constants/theme";
 import { formatDateISO } from "../../utils/date";
 
 interface DateOfAdventureFieldProps {
@@ -44,7 +45,7 @@ export default function DateOfAdventureField({ value, onChange }: DateOfAdventur
       { style: webRowStyle },
       <View style={styles.rowLeft} key="left">
         <View style={styles.iconBadge}>
-          <Ionicons name="calendar-outline" size={17} color="#0B3D91" />
+          <Ionicons name="calendar-outline" size={17} color={colors.primary} />
         </View>
         <Text style={styles.rowLabel}>Date of Adventure</Text>
       </View>,
@@ -86,13 +87,13 @@ export default function DateOfAdventureField({ value, onChange }: DateOfAdventur
       <Pressable style={styles.row} onPress={openPicker}>
         <View style={styles.rowLeft}>
           <View style={styles.iconBadge}>
-            <Ionicons name="calendar-outline" size={17} color="#0B3D91" />
+            <Ionicons name="calendar-outline" size={17} color={colors.primary} />
           </View>
           <Text style={styles.rowLabel}>Date of Adventure</Text>
         </View>
         <View style={styles.rowRight}>
           <Text style={styles.rowValue}>{formatDisplayDate(value)}</Text>
-          <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+          <Ionicons name="chevron-forward" size={16} color={colors.text.tertiary} />
         </View>
       </Pressable>
 
@@ -142,14 +143,14 @@ const webRowStyle = {
   paddingRight: FIELD_PADDING_HORIZONTAL,
   paddingTop: FIELD_PADDING_VERTICAL,
   paddingBottom: FIELD_PADDING_VERTICAL,
-  marginBottom: 18,
+  marginBottom: spacing.lg,
   cursor: "pointer",
 } as const;
 
 const webInputStyle = {
-  fontSize: 15,
-  fontWeight: 600,
-  color: "#0B3D91",
+  fontSize: typography.size.body,
+  fontWeight: typography.weight.semibold,
+  color: colors.primary,
   border: "none",
   background: "transparent",
   textAlign: "right",
@@ -167,60 +168,60 @@ const styles = StyleSheet.create({
     borderRadius: FIELD_RADIUS,
     paddingHorizontal: FIELD_PADDING_HORIZONTAL,
     paddingVertical: FIELD_PADDING_VERTICAL,
-    marginBottom: 18,
+    marginBottom: spacing.lg,
   },
   rowLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing.sm,
   },
   iconBadge: {
     width: 30,
     height: 30,
-    borderRadius: 15,
-    backgroundColor: "#EAF6FA",
+    borderRadius: radius.full,
+    backgroundColor: colors.surface.tint,
     alignItems: "center",
     justifyContent: "center",
   },
   rowLabel: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#101828",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.primary,
   },
   rowRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: spacing.xs,
   },
   rowValue: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#0B3D91",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
+    color: colors.primary,
   },
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   pickerCard: {
     width: "100%",
     maxWidth: 340,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 12,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.xl,
+    padding: spacing.sm,
   },
   doneButton: {
-    backgroundColor: "#0B3D91",
-    borderRadius: 12,
-    paddingVertical: 13,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
     alignItems: "center",
-    marginTop: 4,
+    marginTop: spacing.xxs,
   },
   doneButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
+    color: colors.text.inverse,
   },
 });

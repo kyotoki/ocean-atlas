@@ -83,3 +83,56 @@ def test_unauthenticated_requests_are_rejected():
         assert resp.status_code in (401, 403)
     finally:
         restore_auth_override()
+
+
+def test_list_defaults_to_returning_everything_under_the_page_size():
+    as_user("user_a")
+    for i in range(5):
+        create_dive(title=f"Dive {i}", date=f"2026-01-0{i + 1}")
+
+    resp = client.get("/adventures/")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 5
+
+
+def test_limit_caps_the_number_of_results():
+    as_user("user_a")
+    for i in range(5):
+        create_dive(title=f"Dive {i}", date=f"2026-01-0{i + 1}")
+
+    resp = client.get("/adventures/", params={"limit": 2})
+    assert resp.status_code == 200
+    assert len(resp.json()) == 2
+    # Newest-first (by date), same ordering as the unpaginated list.
+    assert [a["title"] for a in resp.json()] == ["Dive 4", "Dive 3"]
+
+
+def test_offset_moves_the_page_window():
+    as_user("user_a")
+    for i in range(5):
+        create_dive(title=f"Dive {i}", date=f"2026-01-0{i + 1}")
+
+    resp = client.get("/adventures/", params={"limit": 2, "offset": 2})
+    assert resp.status_code == 200
+    assert [a["title"] for a in resp.json()] == ["Dive 2", "Dive 1"]
+
+
+def test_offset_past_the_end_returns_an_empty_list():
+    as_user("user_a")
+    create_dive()
+
+    resp = client.get("/adventures/", params={"offset": 10})
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+def test_limit_beyond_the_max_page_size_is_rejected():
+    as_user("user_a")
+    resp = client.get("/adventures/", params={"limit": 101})
+    assert resp.status_code == 422
+
+
+def test_limit_and_offset_reject_out_of_range_values():
+    as_user("user_a")
+    assert client.get("/adventures/", params={"limit": 0}).status_code == 422
+    assert client.get("/adventures/", params={"offset": -1}).status_code == 422

@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 
+import { colors, elevation, gradients, radius, spacing, typography, withOpacity } from "../../constants/theme";
+
 interface StatCardProps {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
@@ -13,13 +15,13 @@ export default function StatCard({ icon, label, value, featured = false }: StatC
   if (featured) {
     return (
       <LinearGradient
-        colors={["#0B3D91", "#1668C1"]}
+        colors={gradients.primary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.featuredCard}
       >
         <View style={styles.featuredIconBadge}>
-          <Ionicons name={icon} size={22} color="#FFFFFF" />
+          <Ionicons name={icon} size={22} color={colors.text.inverse} />
         </View>
         <Text style={styles.featuredValue} numberOfLines={1} ellipsizeMode="tail">
           {value}
@@ -32,7 +34,7 @@ export default function StatCard({ icon, label, value, featured = false }: StatC
   return (
     <View style={styles.card}>
       <View style={styles.iconBadge}>
-        <Ionicons name={icon} size={18} color="#0B3D5C" />
+        <Ionicons name={icon} size={18} color={colors.secondary} />
       </View>
       <Text style={styles.value} numberOfLines={1} ellipsizeMode="tail">
         {value}
@@ -45,75 +47,67 @@ export default function StatCard({ icon, label, value, featured = false }: StatC
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    paddingVertical: 18,
-    paddingHorizontal: 12,
+    backgroundColor: colors.surface.card,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.sm,
     alignItems: "center",
-    shadowColor: "#021019",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    ...elevation.card,
   },
   iconBadge: {
     width: 34,
     height: 34,
-    borderRadius: 17,
-    backgroundColor: "#EAF6FA",
+    borderRadius: radius.full,
+    backgroundColor: colors.surface.tint,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
+    marginBottom: spacing.sm,
   },
   value: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#101828",
+    fontSize: typography.size.title,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
     letterSpacing: 0.2,
   },
   label: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#5A6B87",
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.secondary,
     textTransform: "uppercase",
-    letterSpacing: 0.4,
-    marginTop: 4,
+    letterSpacing: typography.tracking.wide,
+    marginTop: spacing.xxs,
     textAlign: "center",
   },
   featuredCard: {
     flex: 1,
-    borderRadius: 20,
-    paddingVertical: 24,
-    paddingHorizontal: 16,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.md,
     alignItems: "center",
-    shadowColor: "#021019",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 5,
+    ...elevation.floating,
   },
   featuredIconBadge: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.18)",
+    borderRadius: radius.full,
+    backgroundColor: withOpacity(colors.surface.card, 0.18),
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   featuredValue: {
-    fontSize: 30,
-    fontWeight: "800",
-    color: "#FFFFFF",
+    fontSize: typography.size.display,
+    fontWeight: typography.weight.bold,
+    color: colors.text.inverse,
     letterSpacing: 0.2,
   },
   featuredLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "rgba(255, 255, 255, 0.85)",
+    fontSize: typography.size.small,
+    fontWeight: typography.weight.bold,
+    color: withOpacity(colors.text.inverse, 0.85),
     textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginTop: 6,
+    letterSpacing: typography.tracking.wide,
+    marginTop: spacing.xs,
     textAlign: "center",
   },
 });

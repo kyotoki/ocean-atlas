@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import { Animated, Dimensions, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { colors, radius, spacing, typography } from "../../constants/theme";
 import { UnitSystem } from "../../utils/units";
 import SegmentedControl from "./SegmentedControl";
 import SettingsRow from "./SettingsRow";
@@ -68,7 +69,7 @@ export default function SettingsMenuModal({
           <View style={styles.headerRow}>
             <Text style={styles.title}>Settings</Text>
             <Pressable onPress={onClose} hitSlop={10}>
-              <Ionicons name="close" size={22} color="#5A6B87" />
+              <Ionicons name="close" size={22} color={colors.text.secondary} />
             </Pressable>
           </View>
 
@@ -121,7 +122,7 @@ export default function SettingsMenuModal({
 
           <View style={styles.bottomAnchor}>
             <Pressable style={styles.logOutButton} onPress={onLogOut}>
-              <Ionicons name="log-out-outline" size={17} color="#FFFFFF" />
+              <Ionicons name="log-out-outline" size={17} color={colors.text.inverse} />
               <Text style={styles.logOutButtonText}>Log Out</Text>
             </Pressable>
             <Text style={styles.versionText}>Svel v{appVersion} (Production Build)</Text>
@@ -138,16 +139,18 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     justifyContent: "flex-end",
-    backgroundColor: "rgba(4, 20, 35, 0.55)",
+    backgroundColor: colors.overlay.modalScrim,
   },
   panel: {
     width: "82%",
     maxWidth: 340,
     height: "100%",
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 24,
-    borderBottomLeftRadius: 24,
-    shadowColor: "#021019",
+    backgroundColor: colors.surface.card,
+    borderTopLeftRadius: radius.xxl,
+    borderBottomLeftRadius: radius.xxl,
+    // One-off drawer shadow (negative horizontal offset, doesn't match any
+    // standard elevation preset) - only the color is shared with them.
+    shadowColor: colors.shadowColor,
     shadowOffset: { width: -4, height: 0 },
     shadowOpacity: 0.25,
     shadowRadius: 20,
@@ -156,30 +159,30 @@ const styles = StyleSheet.create({
   panelInner: {
     flex: 1,
     paddingTop: 56,
-    paddingHorizontal: 18,
-    paddingBottom: 24,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   title: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#101828",
+    fontSize: typography.size.subtitle,
+    fontWeight: typography.weight.bold,
+    color: colors.text.primary,
   },
   sectionLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#94A3B8",
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    color: colors.text.tertiary,
     letterSpacing: 0.8,
-    marginTop: 14,
-    marginBottom: 4,
+    marginTop: spacing.md,
+    marginBottom: spacing.xxs,
   },
   sectionLabelSpaced: {
-    marginTop: 18,
+    marginTop: spacing.lg,
   },
   unitToggleWrap: {
     width: 150,
@@ -188,26 +191,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bottomAnchor: {
-    paddingTop: 12,
+    paddingTop: spacing.sm,
   },
   logOutButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#B00020",
-    borderRadius: 14,
-    paddingVertical: 13,
+    gap: spacing.xs,
+    backgroundColor: colors.error,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.sm,
   },
   logOutButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#FFFFFF",
+    fontSize: typography.size.body,
+    fontWeight: typography.weight.bold,
+    color: colors.text.inverse,
   },
   versionText: {
-    fontSize: 11,
-    color: "#B7C2D0",
+    fontSize: typography.size.caption,
+    color: colors.text.disabled,
     textAlign: "center",
-    marginTop: 10,
+    marginTop: spacing.sm,
   },
 });
