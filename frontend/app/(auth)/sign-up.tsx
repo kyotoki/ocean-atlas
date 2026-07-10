@@ -78,6 +78,7 @@ export default function SignUpScreen() {
           style={authStyles.input}
           placeholder="Verification code"
           placeholderTextColor={PLACEHOLDER_COLOR}
+          accessibilityLabel="Verification code"
           keyboardType="number-pad"
           value={code}
           onChangeText={setCode}
@@ -85,13 +86,20 @@ export default function SignUpScreen() {
           onSubmitEditing={onVerifyPress}
         />
 
-        {error ? <Text style={authStyles.error}>{error}</Text> : null}
+        {error ? (
+          <Text style={authStyles.error} accessibilityLiveRegion="polite">
+            {error}
+          </Text>
+        ) : null}
 
         <TouchableOpacity
           style={[authStyles.button, isSubmitting && authStyles.buttonDisabled]}
           onPress={onVerifyPress}
           disabled={isSubmitting}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Verify email"
+          accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
         >
           {isSubmitting ? (
             <ActivityIndicator color="#04202D" />
@@ -120,6 +128,7 @@ export default function SignUpScreen() {
         style={authStyles.input}
         placeholder="Email"
         placeholderTextColor={PLACEHOLDER_COLOR}
+        accessibilityLabel="Email"
         autoCapitalize="none"
         autoComplete="email"
         keyboardType="email-address"
@@ -134,6 +143,7 @@ export default function SignUpScreen() {
         style={authStyles.input}
         placeholder="Password"
         placeholderTextColor={PLACEHOLDER_COLOR}
+        accessibilityLabel="Password"
         secureTextEntry
         autoCapitalize="none"
         value={password}
@@ -142,7 +152,11 @@ export default function SignUpScreen() {
         onSubmitEditing={onSignUpPress}
       />
 
-      {error ? <Text style={authStyles.error}>{error}</Text> : null}
+      {error ? (
+        <Text style={authStyles.error} accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
 
       <CaptchaSlot />
 
@@ -151,6 +165,9 @@ export default function SignUpScreen() {
         onPress={onSignUpPress}
         disabled={isSubmitting}
         activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Sign up"
+        accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
       >
         {isSubmitting ? (
           <ActivityIndicator color="#04202D" />

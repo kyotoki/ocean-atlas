@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
 import { act, renderHook } from "@testing-library/react-native";
 
-import { getQueue } from "../../utils/adventureQueue";
+import { enqueueAdventure, getQueue, MAX_QUEUE_SIZE, QueuedAdventurePayload } from "../../utils/adventureQueue";
 import { showAlert } from "../../utils/crossPlatformAlert";
 import { useAdventureForm } from "../useAdventureForm";
 
@@ -27,6 +27,14 @@ jest.mock("../../utils/api", () => ({
 
 jest.mock("../../utils/crossPlatformAlert", () => ({
   showAlert: jest.fn(),
+}));
+
+// useAdventureForm reads the signed-in user's id (for the first-adventure/
+// first-photo analytics milestones) - imported here directly rather than
+// pulling in the real @clerk/clerk-expo client, which opens a MessagePort
+// that keeps the whole jest process alive past the test run.
+jest.mock("@clerk/clerk-expo", () => ({
+  useUser: () => ({ user: { id: "user_1" } }),
 }));
 
 function fillValidForm(form: ReturnType<typeof useAdventureForm>) {
@@ -94,6 +102,42 @@ test("logs an adventure successfully when online", async () => {
   expect(await getQueue()).toHaveLength(0);
 });
 
+test("logs a freediving adventure, keeping depth but nulling scuba-only fields", async () => {
+  mockAuthedFetch.mockResolvedValue({ ok: true, json: async () => ({ id: 1 }) });
+
+  const { result } = renderHook(() => useAdventureForm());
+
+  act(() => {
+    result.current.handleActivityTypeChange("freediving");
+  });
+  // Freediving tracks depth (like scuba) but has no tank/gas gear.
+  expect(result.current.tracksDepth).toBe(true);
+  expect(result.current.isScuba).toBe(false);
+
+  fillValidForm(result.current);
+  // Even if tank pressure was left over in form state (e.g. from switching
+  // away from scuba without clearing it), the submitted payload must still
+  // null it out for a non-scuba activity type.
+  act(() => {
+    result.current.updateField("tank_pressure_bar", "200");
+  });
+
+  await act(async () => {
+    await result.current.handleSubmit();
+  });
+
+  expect(mockAuthedFetch).toHaveBeenCalledTimes(1);
+  const [, init] = mockAuthedFetch.mock.calls[0];
+  const body = JSON.parse(init.body);
+  expect(body).toMatchObject({
+    activity_type: "freediving",
+    max_depth_meters: 18,
+    tank_pressure_bar: null,
+    gas_mix: null,
+  });
+  expect(showAlert).toHaveBeenCalledWith("Adventure logged", expect.any(String), expect.any(Array));
+});
+
 test("queues the adventure locally when the device is offline", async () => {
   (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: false });
 
@@ -140,6 +184,40 @@ test("queues the adventure when the request fails for a connectivity reason", as
   );
 });
 
+test("shows a clear message and leaves the form filled when the offline queue is full", async () => {
+  (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: false });
+
+  const filler: QueuedAdventurePayload = {
+    title: "Filler",
+    date: "2026-07-01",
+    location_name: "Somewhere",
+    latitude: 0,
+    longitude: 0,
+    max_depth_meters: 10,
+    duration_minutes: 20,
+    notes: null,
+    activity_type: "scuba",
+    tank_pressure_bar: null,
+    gas_mix: null,
+  };
+  for (let i = 0; i < MAX_QUEUE_SIZE; i++) {
+    await enqueueAdventure(filler, []);
+  }
+
+  const { result } = renderHook(() => useAdventureForm());
+  fillValidForm(result.current);
+
+  await act(async () => {
+    await result.current.handleSubmit();
+  });
+
+  // Not added - the queue stays exactly at the cap, not the cap + 1.
+  expect(await getQueue()).toHaveLength(MAX_QUEUE_SIZE);
+  expect(showAlert).toHaveBeenCalledWith("Sync queue full", expect.stringContaining("full"));
+  // Form is left filled so the user doesn't lose what they typed.
+  expect(result.current.form.title).toBe("Reef Dive");
+});
+
 test("shows a real error and does not queue when the server rejects the request", async () => {
   mockAuthedFetch.mockResolvedValue({ ok: false, status: 422 });
 
@@ -157,4 +235,35 @@ test("shows a real error and does not queue when the server rejects the request"
   );
   // Form is left filled so the user can retry, not silently cleared.
   expect(result.current.form.title).toBe("Reef Dive");
+});
+
+test("shows a sign-in-required message (not a generic error) when the token is rejected", async () => {
+  mockAuthedFetch.mockResolvedValue({ ok: false, status: 401 });
+
+  const { result } = renderHook(() => useAdventureForm());
+  fillValidForm(result.current);
+
+  await act(async () => {
+    await result.current.handleSubmit();
+  });
+
+  expect(await getQueue()).toHaveLength(0);
+  expect(showAlert).toHaveBeenCalledWith("Sign-in required", expect.stringContaining("sign"));
+  expect(showAlert).not.toHaveBeenCalledWith("Unable to save adventure", expect.anything());
+  // Not queued offline either - retrying later won't help until re-authenticated.
+  expect(result.current.form.title).toBe("Reef Dive");
+});
+
+test("shows a sign-in-required message when a 403 is returned", async () => {
+  mockAuthedFetch.mockResolvedValue({ ok: false, status: 403 });
+
+  const { result } = renderHook(() => useAdventureForm());
+  fillValidForm(result.current);
+
+  await act(async () => {
+    await result.current.handleSubmit();
+  });
+
+  expect(await getQueue()).toHaveLength(0);
+  expect(showAlert).toHaveBeenCalledWith("Sign-in required", expect.stringContaining("sign"));
 });

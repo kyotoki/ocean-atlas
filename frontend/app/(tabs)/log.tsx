@@ -87,7 +87,7 @@ export default function LogAdventureScreen() {
           <Text style={styles.sectionLabel}>DIVE METRICS</Text>
 
           <DiveMetricsFields
-            isScuba={form.isScuba}
+            showMaxDepth={form.tracksDepth}
             unitSystem={form.isImperial ? "imperial" : "metric"}
             maxDepth={form.form.max_depth_meters}
             onChangeMaxDepth={(v) => form.updateField("max_depth_meters", v)}
@@ -142,6 +142,9 @@ export default function LogAdventureScreen() {
             onPress={form.handleSubmit}
             disabled={form.isSubmitting}
             activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Log adventure"
+            accessibilityState={{ disabled: form.isSubmitting, busy: form.isSubmitting }}
           >
             {form.isSubmitting ? (
               <>

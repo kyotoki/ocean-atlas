@@ -5,11 +5,12 @@ import { ENDPOINTS } from "../constants/api";
 import {
   getQueue,
   markQueueItemFailed,
+  MAX_QUEUE_SIZE,
   QueuedAdventure,
   removeFromQueue,
 } from "./adventureQueue";
 import { useAuthedFetch } from "./api";
-import { ServerRejectedError } from "./errors";
+import { isAuthError, REAUTH_MESSAGE, ServerRejectedError } from "./errors";
 import { uploadPhoto } from "./uploadPhoto";
 
 type AuthedFetch = ReturnType<typeof useAuthedFetch>;
@@ -19,9 +20,12 @@ type AuthedFetch = ReturnType<typeof useAuthedFetch>;
 // at a time instead of every mounted screen racing to sync the same queue.
 let isSyncing = false;
 
-type SyncOutcome = "synced" | "failed" | "retry";
+type SyncResult =
+  | { outcome: "synced" }
+  | { outcome: "failed"; error: ServerRejectedError }
+  | { outcome: "retry" };
 
-async function syncOne(item: QueuedAdventure, authedFetch: AuthedFetch): Promise<SyncOutcome> {
+async function syncOne(item: QueuedAdventure, authedFetch: AuthedFetch): Promise<SyncResult> {
   try {
     const photoUrls: string[] = [];
     for (const photo of item.photos) {
@@ -35,20 +39,22 @@ async function syncOne(item: QueuedAdventure, authedFetch: AuthedFetch): Promise
     });
 
     if (!response.ok) {
-      throw new ServerRejectedError(`Server responded with status ${response.status}`);
+      throw new ServerRejectedError(`Server responded with status ${response.status}`, response.status);
     }
-    return "synced";
+    return { outcome: "synced" };
   } catch (err) {
     // A real rejection means retrying unchanged would just fail again -
     // anything else (fetch threw, token refresh failed) is assumed to be a
     // connectivity blip worth retrying on the next reconnect.
-    return err instanceof ServerRejectedError ? "failed" : "retry";
+    return err instanceof ServerRejectedError ? { outcome: "failed", error: err } : { outcome: "retry" };
   }
 }
 
 export interface UseAdventureSync {
   pendingCount: number;
   failedCount: number;
+  isQueueFull: boolean;
+  needsReauth: boolean;
   isSyncing: boolean;
   runSync: () => Promise<void>;
   refreshCounts: () => Promise<void>;
@@ -58,13 +64,18 @@ export function useAdventureSync(): UseAdventureSync {
   const authedFetch = useAuthedFetch();
   const [pendingCount, setPendingCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
+  const [needsReauth, setNeedsReauth] = useState(false);
   const [isSyncingState, setIsSyncingState] = useState(false);
 
   const refreshCounts = useCallback(async () => {
     const queue = await getQueue();
     setPendingCount(queue.filter((item) => item.status === "pending").length);
-    setFailedCount(queue.filter((item) => item.status === "failed").length);
+    const failed = queue.filter((item) => item.status === "failed");
+    setFailedCount(failed.length);
+    setNeedsReauth(failed.some((item) => item.requiresReauth));
   }, []);
+
+  const isQueueFull = pendingCount + failedCount >= MAX_QUEUE_SIZE;
 
   const runSync = useCallback(async () => {
     if (isSyncing) {
@@ -75,11 +86,14 @@ export function useAdventureSync(): UseAdventureSync {
     try {
       const queue = await getQueue();
       for (const item of queue.filter((entry) => entry.status === "pending")) {
-        const outcome = await syncOne(item, authedFetch);
-        if (outcome === "synced") {
+        const result = await syncOne(item, authedFetch);
+        if (result.outcome === "synced") {
           await removeFromQueue(item.localId);
-        } else if (outcome === "failed") {
-          await markQueueItemFailed(item.localId, "The server rejected this adventure.");
+        } else if (result.outcome === "failed") {
+          const reauth = isAuthError(result.error);
+          await markQueueItemFailed(item.localId, reauth ? REAUTH_MESSAGE : result.error.message, {
+            requiresReauth: reauth,
+          });
         }
         // "retry": leave it as-is in the queue for the next sync pass.
       }
@@ -100,5 +114,13 @@ export function useAdventureSync(): UseAdventureSync {
     return unsubscribe;
   }, [runSync, refreshCounts]);
 
-  return { pendingCount, failedCount, isSyncing: isSyncingState, runSync, refreshCounts };
+  return {
+    pendingCount,
+    failedCount,
+    isQueueFull,
+    needsReauth,
+    isSyncing: isSyncingState,
+    runSync,
+    refreshCounts,
+  };
 }

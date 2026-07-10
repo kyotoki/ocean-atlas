@@ -61,7 +61,7 @@ export default function GearManagerModal({
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <View style={styles.headerRow}>
             <Text style={styles.title}>Manage Equipment</Text>
-            <Pressable onPress={onClose} hitSlop={10}>
+            <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close">
               <Ionicons name="close" size={20} color={colors.text.secondary} />
             </Pressable>
           </View>
@@ -92,7 +92,12 @@ export default function GearManagerModal({
                         : ""}
                     </Text>
                   </View>
-                  <Pressable onPress={() => removeGear(item.id)} hitSlop={8}>
+                  <Pressable
+                    onPress={() => removeGear(item.id)}
+                    hitSlop={10}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${item.name}`}
+                  >
                     <Ionicons name="trash-outline" size={18} color={colors.error} />
                   </Pressable>
                 </View>
@@ -109,6 +114,10 @@ export default function GearManagerModal({
                   key={type.value}
                   onPress={() => setTypeDraft(type.value)}
                   style={[styles.typeChip, selected && styles.typeChipSelected]}
+                  hitSlop={6}
+                  accessibilityRole="radio"
+                  accessibilityLabel={type.label}
+                  accessibilityState={{ selected }}
                 >
                   <Ionicons
                     name={type.icon}
@@ -128,7 +137,13 @@ export default function GearManagerModal({
               onChangeText={setNameDraft}
               onSubmitEditing={addGear}
             />
-            <Pressable style={styles.addButton} onPress={addGear} hitSlop={8}>
+            <Pressable
+              style={styles.addButton}
+              onPress={addGear}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Add gear"
+            >
               <Ionicons name="add" size={20} color={colors.text.inverse} />
             </Pressable>
           </View>

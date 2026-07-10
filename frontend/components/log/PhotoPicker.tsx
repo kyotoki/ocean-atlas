@@ -43,6 +43,8 @@ export default function PhotoPicker({
                 onPress={() => onRemovePhotoAt(index)}
                 hitSlop={8}
                 disabled={isSubmitting}
+                accessibilityRole="button"
+                accessibilityLabel="Remove photo"
               >
                 <Ionicons
                   name="close-circle"

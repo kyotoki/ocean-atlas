@@ -13,7 +13,13 @@ export default function AchievementBadge({ achievement, onPress }: AchievementBa
   const { unlocked, color, emoji, name } = achievement;
 
   return (
-    <Pressable style={styles.tile} onPress={() => onPress(achievement)} hitSlop={4}>
+    <Pressable
+      style={styles.tile}
+      onPress={() => onPress(achievement)}
+      hitSlop={4}
+      accessibilityRole="button"
+      accessibilityLabel={`${name}, ${unlocked ? "unlocked" : "locked"}`}
+    >
       <View
         style={[
           styles.iconCircle,

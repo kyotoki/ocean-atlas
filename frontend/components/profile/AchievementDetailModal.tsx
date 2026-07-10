@@ -49,7 +49,7 @@ export default function AchievementDetailModal({
 
           <Text style={styles.description}>{description}</Text>
 
-          <Pressable style={styles.closeButton} onPress={onClose}>
+          <Pressable style={styles.closeButton} onPress={onClose} accessibilityRole="button">
             <Text style={styles.closeButtonText}>Got it</Text>
           </Pressable>
         </Pressable>

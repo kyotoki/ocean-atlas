@@ -1,4 +1,8 @@
-export type ActivityType = "scuba" | "snorkeling";
+export type ActivityType = "scuba" | "snorkeling" | "freediving";
+
+// Used only by the profile analytics filter - "all" has no meaning when
+// logging a single adventure, which always needs one concrete ActivityType.
+export type ActivityFilter = ActivityType | "all";
 
 export interface Adventure {
   id: number;

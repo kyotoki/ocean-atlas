@@ -27,6 +27,7 @@ export default function SettingsRow({
       onPress={onPress}
       style={[styles.row, highlighted && styles.rowHighlighted]}
       disabled={!onPress}
+      accessibilityRole={onPress ? "button" : undefined}
     >
       <View style={[styles.iconBadge, highlighted && styles.iconBadgeHighlighted]}>
         <Ionicons name={icon} size={17} color={highlighted ? colors.text.inverse : colors.secondary} />

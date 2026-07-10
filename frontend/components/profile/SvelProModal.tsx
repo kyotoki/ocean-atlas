@@ -28,7 +28,13 @@ export default function SvelProModal({ visible, onClose }: SvelProModalProps) {
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
         <LinearGradient colors={gradients.deepOcean} style={styles.hero}>
-          <Pressable style={styles.closeButton} onPress={onClose} hitSlop={10}>
+          <Pressable
+            style={styles.closeButton}
+            onPress={onClose}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+          >
             <Ionicons name="close" size={22} color={colors.text.inverse} />
           </Pressable>
           <View style={styles.heroIconBadge}>

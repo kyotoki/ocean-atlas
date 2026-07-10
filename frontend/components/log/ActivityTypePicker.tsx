@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { ACTIVITY_TYPES } from "../../constants/activityTypes";
 import {
   FIELD_BORDER,
   FIELD_FILL,
@@ -12,10 +13,7 @@ import {
 import { colors, radius, spacing, typography } from "../../constants/theme";
 import { ActivityType } from "../../types/adventure";
 
-const OPTIONS: { value: ActivityType; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: "scuba", label: "Scuba Diving", icon: "trending-down-outline" },
-  { value: "snorkeling", label: "Snorkeling", icon: "water-outline" },
-];
+const OPTIONS = ACTIVITY_TYPES;
 
 interface ActivityTypePickerProps {
   value: ActivityType;
@@ -29,7 +27,12 @@ export default function ActivityTypePicker({ value, onChange }: ActivityTypePick
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Activity Type</Text>
-      <Pressable style={styles.field} onPress={() => setIsOpen(true)}>
+      <Pressable
+        style={styles.field}
+        onPress={() => setIsOpen(true)}
+        accessibilityRole="button"
+        accessibilityLabel={`Activity type, ${selected.label}`}
+      >
         <View style={styles.selectedIconBadge}>
           <Ionicons name={selected.icon} size={16} color={colors.primary} />
         </View>
@@ -50,6 +53,9 @@ export default function ActivityTypePicker({ value, onChange }: ActivityTypePick
                     onChange(option.value);
                     setIsOpen(false);
                   }}
+                  accessibilityRole="radio"
+                  accessibilityLabel={option.label}
+                  accessibilityState={{ selected: isSelected }}
                 >
                   <Ionicons
                     name={option.icon}

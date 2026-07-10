@@ -46,9 +46,18 @@ const palette = {
   ink900: "#101828",
   ink700: "#344054",
   ink500: "#5A6B87",
-  ink400: "#94A3B8",
-  ink300: "#A0AEC0",
-  ink200: "#CBD5E1",
+  // ink400/300/200 are darkened from their original #94A3B8/#A0AEC0/#CBD5E1 -
+  // those failed WCAG AA on white/pageBg (2.56:1 / 2.26:1 / 1.48:1, computed
+  // via actual relative-luminance contrast math, not eyeballed). Kept in the
+  // same relative order (ink400 darkest/most-emphasis -> ink200
+  // lightest/least, matching text.tertiary > text.muted > text.disabled)
+  // rather than converging all three on one AA-minimum shade. ink200 is only
+  // used for genuinely disabled UI (WCAG's inactive-component text is exempt
+  // from the contrast requirement), so it's improved but deliberately not
+  // pushed all the way to 4.5:1 - that would stop reading as "disabled".
+  ink400: "#6C7786", // 4.54:1 on white (text.tertiary)
+  ink300: "#85909F", // 3.24:1 on white (text.muted - placeholder text only)
+  ink200: "#9CA4AD", // 2.52:1 on white (text.disabled - inactive UI, exempt from AA)
 
   // Neutral surfaces & borders
   white: "#FFFFFF",
@@ -70,6 +79,8 @@ const palette = {
   goldenrod600: "#B8860B",
   violet700: "#5B3E96",
   rust700: "#B0472B",
+  teal700: "#0F766E",
+  flame600: "#EA580C",
 
   // Dedicated shadow ink - close to `abyss` but a distinct value used
   // consistently as shadowColor (and as the base for the dark overlay scrims
@@ -116,10 +127,12 @@ export const colors = {
   achievement: {
     scuba: palette.blue900,
     snorkel: palette.cyan500,
+    freediving: palette.teal700,
     certification: palette.goldenrod600,
     globetrotter: palette.green700,
     nightOwl: palette.violet700,
     gearGuru: palette.rust700,
+    streak: palette.flame600,
   },
 
   surface: {

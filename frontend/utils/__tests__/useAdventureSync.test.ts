@@ -3,6 +3,7 @@ import NetInfo from "@react-native-community/netinfo";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 
 import { enqueueAdventure, getQueue, QueuedAdventurePayload } from "../adventureQueue";
+import { REAUTH_MESSAGE } from "../errors";
 import { useAdventureSync } from "../useAdventureSync";
 
 const mockAuthedFetch = jest.fn();
@@ -54,7 +55,7 @@ test("reconnecting syncs a pending item and removes it from the queue", async ()
   );
 });
 
-test("a server rejection marks the item failed instead of retrying forever", async () => {
+test("a server rejection marks the item failed instead of retrying forever, storing the real error", async () => {
   await enqueueAdventure(PAYLOAD, []);
   mockAuthedFetch.mockResolvedValue({ ok: false, status: 422 });
 
@@ -65,9 +66,46 @@ test("a server rejection marks the item failed instead of retrying forever", asy
 
   await waitFor(() => expect(result.current.failedCount).toBe(1));
   expect(result.current.pendingCount).toBe(0);
+  expect(result.current.needsReauth).toBe(false);
 
   const [queued] = await getQueue();
   expect(queued.status).toBe("failed");
+  expect(queued.error).toContain("422");
+  expect(queued.requiresReauth).toBe(false);
+});
+
+test("a 401 marks the item as requiring re-authentication with a clear message", async () => {
+  await enqueueAdventure(PAYLOAD, []);
+  mockAuthedFetch.mockResolvedValue({ ok: false, status: 401 });
+
+  const { result } = renderHook(() => useAdventureSync());
+  await waitFor(() => expect(result.current.pendingCount).toBe(1));
+
+  emitConnected();
+
+  await waitFor(() => expect(result.current.needsReauth).toBe(true));
+  expect(result.current.failedCount).toBe(1);
+
+  const [queued] = await getQueue();
+  expect(queued.status).toBe("failed");
+  expect(queued.requiresReauth).toBe(true);
+  expect(queued.error).toBe(REAUTH_MESSAGE);
+});
+
+test("a 403 is also treated as requiring re-authentication", async () => {
+  await enqueueAdventure(PAYLOAD, []);
+  mockAuthedFetch.mockResolvedValue({ ok: false, status: 403 });
+
+  const { result } = renderHook(() => useAdventureSync());
+  await waitFor(() => expect(result.current.pendingCount).toBe(1));
+
+  emitConnected();
+
+  await waitFor(() => expect(result.current.needsReauth).toBe(true));
+
+  const [queued] = await getQueue();
+  expect(queued.requiresReauth).toBe(true);
+  expect(queued.error).toBe(REAUTH_MESSAGE);
 });
 
 test("a network error leaves the item pending for the next reconnect", async () => {

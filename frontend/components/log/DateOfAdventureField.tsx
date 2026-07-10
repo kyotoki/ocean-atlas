@@ -84,7 +84,12 @@ export default function DateOfAdventureField({ value, onChange }: DateOfAdventur
 
   return (
     <>
-      <Pressable style={styles.row} onPress={openPicker}>
+      <Pressable
+        style={styles.row}
+        onPress={openPicker}
+        accessibilityRole="button"
+        accessibilityLabel={`Date of adventure, ${formatDisplayDate(value)}`}
+      >
         <View style={styles.rowLeft}>
           <View style={styles.iconBadge}>
             <Ionicons name="calendar-outline" size={17} color={colors.primary} />

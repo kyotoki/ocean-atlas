@@ -1,0 +1,371 @@
+/* ---------------------------------------------------------------------------
+   Design tokens - mirrored 1:1 from frontend/constants/theme.ts so the
+   marketing site shares the app's exact palette and type scale rather than
+   inventing a separate visual identity. If theme.ts changes, update here too.
+--------------------------------------------------------------------------- */
+:root {
+  /* Palette (frontend/constants/theme.ts -> palette) */
+  --blue900: #0b3d91; /* primary */
+  --blue600: #1668c1; /* primaryLight */
+  --teal900: #0b3d5c; /* secondary */
+  --teal950: #062c43;
+  --abyss: #02101f;
+  --cyan500: #06b6d4; /* accent */
+  --teal700: #0f766e; /* achievement.freediving */
+
+  --ink900: #101828; /* text.primary */
+  --ink700: #344054; /* text.label */
+  --ink500: #5a6b87; /* text.secondary */
+  --ink400: #6c7786; /* text.tertiary */
+
+  --white: #ffffff;
+  --page-bg: #f2f6fc; /* surface.page */
+  --tint-blue: #eaf6fa; /* surface.tint */
+  --border: #e2e8f0;
+
+  --ice-blue: #8fb8ce; /* text.inverseMuted */
+  --ice-blue-strong: #c7dce8; /* text.inverseStrong */
+
+  /* Achievement/activity-type colors (constants/activityTypes.ts) */
+  --activity-scuba: var(--blue900);
+  --activity-snorkel: var(--cyan500);
+  --activity-freediving: var(--teal700);
+
+  /* Semantic colors */
+  --color-primary: var(--blue900);
+  --color-secondary: var(--teal900);
+  --color-accent: var(--cyan500);
+  --text-primary: var(--ink900);
+  --text-label: var(--ink700);
+  --text-secondary: var(--ink500);
+  --text-tertiary: var(--ink400);
+  --text-inverse: var(--white);
+  --text-inverse-muted: var(--ice-blue);
+  --text-inverse-strong: var(--ice-blue-strong);
+  --surface-page: var(--page-bg);
+  --surface-card: var(--white);
+  --surface-tint: var(--tint-blue);
+  --border-default: var(--border);
+
+  /* Gradients (theme.ts -> gradients.deepOcean / gradients.primary) */
+  --gradient-deep-ocean: linear-gradient(160deg, var(--abyss) 0%, var(--teal950) 50%, var(--teal900) 100%);
+  --gradient-primary: linear-gradient(135deg, var(--blue900) 0%, var(--blue600) 100%);
+
+  /* Typography scale (theme.ts -> typography) */
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --size-caption: 11px;
+  --size-small: 13px;
+  --size-body: 15px;
+  --size-subtitle: 17px;
+  --size-title: 20px;
+  --size-headline: 24px;
+  --size-display: 32px;
+  --line-caption: 15px;
+  --line-small: 18px;
+  --line-body: 21px;
+  --line-subtitle: 23px;
+  --line-title: 26px;
+  --line-headline: 30px;
+  --line-display: 38px;
+  --tracking-wide: 0.5px;
+
+  /* Spacing scale (theme.ts -> spacing, 4px base) */
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 20px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
+  --space-xxxl: 40px;
+
+  /* Radius scale (theme.ts -> radius) */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-xxl: 24px;
+  --radius-full: 999px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--size-body);
+  line-height: var(--line-body);
+  color: var(--text-primary);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+/* Hero - the app's exact "deep ocean" gradient (OceanAuthLayout uses the same
+   three stops for every auth/onboarding screen), so this is the same visual
+   moment a signed-up user sees, not a new one invented for the web. */
+.hero {
+  background: var(--gradient-deep-ocean);
+  color: var(--text-inverse);
+  padding: var(--space-xxxl) 0 var(--space-xxl);
+  text-align: center;
+}
+
+.hero-badge {
+  width: 84px;
+  height: 84px;
+  border-radius: var(--radius-full);
+  margin: 0 auto var(--space-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(2, 16, 25, 0.4);
+}
+
+.hero-badge img {
+  width: 100%;
+  height: 100%;
+}
+
+.hero h1 {
+  font-size: var(--size-display);
+  line-height: var(--line-display);
+  font-weight: var(--weight-bold);
+  margin: 0 0 var(--space-sm);
+  letter-spacing: 0.2px;
+}
+
+.hero p {
+  font-size: var(--size-body);
+  line-height: var(--line-body);
+  color: var(--text-inverse-strong);
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* Sections */
+section.panel {
+  padding: var(--space-xxl) 0;
+}
+
+.card {
+  background: var(--surface-card);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  box-shadow: 0 6px 16px rgba(2, 16, 25, 0.06);
+}
+
+h2 {
+  font-size: var(--size-title);
+  line-height: var(--line-title);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm);
+}
+
+.eyebrow {
+  font-size: var(--size-caption);
+  line-height: var(--line-caption);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-xs);
+}
+
+p {
+  color: var(--text-label);
+  margin: 0 0 var(--space-md);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+/* Activity type chips - reuse each activity's real color + emoji from
+   constants/activityTypes.ts rather than inventing new icons. */
+.activity-row {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-top: var(--space-lg);
+}
+
+.activity-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: var(--surface-tint);
+  border-radius: var(--radius-full);
+  padding: var(--space-xs) var(--space-md);
+  flex: 1 1 auto;
+}
+
+.activity-chip .dot {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--size-subtitle);
+  flex-shrink: 0;
+}
+
+.activity-chip span.label {
+  font-size: var(--size-small);
+  font-weight: var(--weight-semibold);
+  color: var(--text-label);
+  white-space: nowrap;
+}
+
+.activity-chip.scuba .dot {
+  background: var(--activity-scuba);
+}
+
+.activity-chip.snorkel .dot {
+  background: var(--activity-snorkel);
+}
+
+.activity-chip.freediving .dot {
+  background: var(--activity-freediving);
+}
+
+/* Email capture form */
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.signup-form input[type="email"] {
+  width: 100%;
+  font-size: var(--size-body);
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background: var(--surface-page);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.signup-form input[type="email"]:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  font-size: var(--size-body);
+  font-weight: var(--weight-bold);
+  font-family: var(--font-family);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-lg);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.button-primary:hover {
+  background: var(--blue600);
+}
+
+.form-note {
+  font-size: var(--size-small);
+  line-height: var(--line-small);
+  color: var(--text-tertiary);
+  margin-top: var(--space-xs);
+}
+
+/* Placeholder notice (privacy/terms pages) */
+.notice {
+  display: inline-block;
+  background: var(--surface-tint);
+  color: var(--color-secondary);
+  font-size: var(--size-small);
+  font-weight: var(--weight-semibold);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+}
+
+/* Footer */
+footer {
+  padding: var(--space-xl) 0 var(--space-xxxl);
+  text-align: center;
+}
+
+footer .links {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-sm);
+}
+
+footer a {
+  font-size: var(--size-small);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: var(--color-primary);
+}
+
+footer .copyright {
+  font-size: var(--size-caption);
+  color: var(--text-tertiary);
+}
+
+/* Simple pages (privacy/terms/thanks) */
+.simple-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-xxxl) 0;
+}
+
+.simple-page .container {
+  max-width: 480px;
+}
+
+@media (max-width: 420px) {
+  .hero h1 {
+    font-size: var(--size-headline);
+    line-height: var(--line-headline);
+  }
+  .activity-chip span.label {
+    white-space: normal;
+  }
+}

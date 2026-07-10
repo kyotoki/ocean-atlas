@@ -75,6 +75,9 @@ export default function LocationFields({
             onPress={onVerifyLocation}
             disabled={isGeocoding}
             activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Verify location"
+            accessibilityState={{ disabled: isGeocoding, busy: isGeocoding }}
           >
             {isGeocoding ? (
               <WaveSpinner size="small" color={colors.text.inverse} />
@@ -84,17 +87,21 @@ export default function LocationFields({
           </TouchableOpacity>
 
           {geocodeStatus === "success" && (
-            <View style={styles.geocodeFeedbackRow}>
+            <View style={styles.geocodeFeedbackRow} accessibilityLiveRegion="polite">
               <Ionicons name="checkmark-circle" size={16} color={colors.success} />
               <Text style={styles.geocodeSuccessText}>Location found! Mapping coordinates...</Text>
             </View>
           )}
-          {locationQueryError && <Text style={styles.geocodeErrorText}>{locationQueryError}</Text>}
+          {locationQueryError && (
+            <Text style={styles.geocodeErrorText} accessibilityLiveRegion="polite">
+              {locationQueryError}
+            </Text>
+          )}
         </View>
       )}
 
       <View style={styles.locationModeRow}>
-        <TouchableOpacity onPress={onToggleLocationMode} hitSlop={8}>
+        <TouchableOpacity onPress={onToggleLocationMode} hitSlop={8} accessibilityRole="button">
           <Text style={styles.locationModeToggle}>
             {locationMode === "coordinates"
               ? "Search by Location Name instead"

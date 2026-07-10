@@ -28,7 +28,7 @@ export default function CountryPickerModal({ visible, onClose, onSelect }: Count
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <View style={styles.headerRow}>
             <Text style={styles.title}>Home Country</Text>
-            <Pressable onPress={onClose} hitSlop={10}>
+            <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close">
               <Ionicons name="close" size={20} color={colors.text.secondary} />
             </Pressable>
           </View>

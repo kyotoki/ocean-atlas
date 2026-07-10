@@ -1,3 +1,4 @@
+import { useUser } from "@clerk/clerk-expo";
 import NetInfo from "@react-native-community/netinfo";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -8,11 +9,13 @@ import { usePreferences } from "../contexts/PreferencesContext";
 import { ActivityType } from "../types/adventure";
 import { enqueueAdventure, QueuedAdventurePayload, QueuedPhoto } from "../utils/adventureQueue";
 import { useAdventureSync } from "../utils/useAdventureSync";
+import { AnalyticsEvents, isFirstOccurrence, track } from "../utils/analytics";
 import { useAuthedFetch } from "../utils/api";
 import { showAlert } from "../utils/crossPlatformAlert";
 import { formatDateISO } from "../utils/date";
-import { ServerRejectedError } from "../utils/errors";
+import { isAuthError, QueueFullError, REAUTH_MESSAGE, ServerRejectedError } from "../utils/errors";
 import { geocodeLocationName } from "../utils/geocode";
+import { extendStreakReminderFromLog } from "../utils/notifications";
 import { uploadPhoto } from "../utils/uploadPhoto";
 import { depthUnitLabel, feetToMeters } from "../utils/units";
 
@@ -44,6 +47,14 @@ const INITIAL_FORM: AdventureFormState = {
   gas_mix: "",
 };
 
+// Scuba and freediving both track how deep the diver actually went; snorkeling
+// is surface-based and doesn't. Distinct from `isScuba` below, which gates
+// scuba-only gear fields (tank pressure, gas mix) - freediving tracks depth
+// without needing a tank.
+function tracksDepthFor(activityType: ActivityType): boolean {
+  return activityType === "scuba" || activityType === "freediving";
+}
+
 function buildPayload(
   form: AdventureFormState,
   activityType: ActivityType,
@@ -51,13 +62,14 @@ function buildPayload(
   isScuba: boolean,
   isImperial: boolean
 ): QueuedAdventurePayload {
+  const tracksDepth = tracksDepthFor(activityType);
   return {
     title: form.title.trim(),
     date: formatDateISO(adventureDate),
     location_name: form.location_name.trim(),
     latitude: Number(form.latitude),
     longitude: Number(form.longitude),
-    max_depth_meters: isScuba
+    max_depth_meters: tracksDepth
       ? isImperial
         ? feetToMeters(Number(form.max_depth_meters))
         : Number(form.max_depth_meters)
@@ -73,6 +85,7 @@ function buildPayload(
 export function useAdventureForm() {
   const router = useRouter();
   const authedFetch = useAuthedFetch();
+  const { user } = useUser();
   const { unitSystem } = usePreferences();
   const { refreshCounts: refreshSyncCounts } = useAdventureSync();
   const isImperial = unitSystem === "imperial";
@@ -90,6 +103,7 @@ export function useAdventureForm() {
 
   const isSubmitting = submitStage !== "idle";
   const isScuba = activityType === "scuba";
+  const tracksDepth = tracksDepthFor(activityType);
   const isGeocoding = geocodeStatus === "loading";
 
   const handleActivityTypeChange = (next: ActivityType) => {
@@ -214,7 +228,7 @@ export function useAdventureForm() {
     }
     setLocationQueryError(nextLocationQueryError);
 
-    if (isScuba) {
+    if (tracksDepth) {
       const maxDepth = Number(form.max_depth_meters);
       if (form.max_depth_meters.trim() === "" || Number.isNaN(maxDepth) || maxDepth < 0) {
         nextErrors.max_depth_meters = `Enter a valid depth in ${depthUnitLabel(unitSystem)}.`;
@@ -253,14 +267,53 @@ export function useAdventureForm() {
     setLocationQueryError(undefined);
   };
 
+  // Shared by both the online-success and offline-queued-success paths below
+  // - from an analytics/engagement standpoint, a dive the user has queued
+  // offline is just as "logged" as one that made it to the server
+  // immediately, so both should count and both should push the streak
+  // reminder out the same way.
+  const trackLoggedAdventure = (payload: QueuedAdventurePayload, hasPhotos: boolean) => {
+    track(AnalyticsEvents.AdventureLogged, { activity_type: payload.activity_type });
+    extendStreakReminderFromLog(payload.date);
+
+    if (!user?.id) {
+      return;
+    }
+    isFirstOccurrence(user.id, "first_adventure_logged").then((isFirst) => {
+      if (isFirst) {
+        track(AnalyticsEvents.FirstAdventureLogged, { activity_type: payload.activity_type });
+      }
+    });
+    if (hasPhotos) {
+      isFirstOccurrence(user.id, "first_photo_added").then((isFirst) => {
+        if (isFirst) {
+          track(AnalyticsEvents.FirstPhotoAdded, { activity_type: payload.activity_type });
+        }
+      });
+    }
+  };
+
   const queueOffline = async (payload: QueuedAdventurePayload) => {
     const queuedPhotos: QueuedPhoto[] = photos.map((asset) => ({
       uri: asset.uri,
       fileName: asset.fileName ?? null,
       mimeType: asset.mimeType ?? null,
     }));
-    await enqueueAdventure(payload, queuedPhotos);
+
+    try {
+      await enqueueAdventure(payload, queuedPhotos);
+    } catch (err) {
+      if (err instanceof QueueFullError) {
+        // Not saved - leave the form filled in so nothing typed is lost,
+        // and say so clearly rather than reporting a false "Saved offline".
+        showAlert("Sync queue full", err.message);
+        return;
+      }
+      throw err;
+    }
+
     await refreshSyncCounts();
+    trackLoggedAdventure(payload, queuedPhotos.length > 0);
     resetForm();
     showAlert(
       "Saved offline",
@@ -295,7 +348,14 @@ export function useAdventureForm() {
           );
         } catch (err) {
           if (err instanceof ServerRejectedError) {
-            throw new ServerRejectedError("Unable to upload photos. Check your connection and try again.");
+            // Auth failures are handled uniformly in the outer catch below
+            // via isAuthError - only re-wrap the message for a real content
+            // rejection (bad file, too large, etc.), preserving the status
+            // so that check still works.
+            throw new ServerRejectedError(
+              isAuthError(err) ? err.message : "Unable to upload photos. Check your connection and try again.",
+              err.status
+            );
           }
           throw err;
         }
@@ -309,9 +369,10 @@ export function useAdventureForm() {
       });
 
       if (!response.ok) {
-        throw new ServerRejectedError(`Server responded with status ${response.status}`);
+        throw new ServerRejectedError(`Server responded with status ${response.status}`, response.status);
       }
 
+      trackLoggedAdventure(payload, photoUrls.length > 0);
       resetForm();
       showAlert("Adventure logged", "Your dive has been added to the Ocean Map.", [
         { text: "View Map", onPress: () => router.push("/") },
@@ -319,7 +380,11 @@ export function useAdventureForm() {
       ]);
     } catch (err) {
       if (err instanceof ServerRejectedError) {
-        showAlert("Unable to save adventure", err.message);
+        if (isAuthError(err)) {
+          showAlert("Sign-in required", REAUTH_MESSAGE);
+        } else {
+          showAlert("Unable to save adventure", err.message);
+        }
       } else {
         // Not a server rejection - fetch itself failed (or the auth token
         // refresh did), which almost always means we lost connectivity
@@ -341,6 +406,7 @@ export function useAdventureForm() {
     submitStage,
     isSubmitting,
     isScuba,
+    tracksDepth,
     isImperial,
     locationMode,
     locationQuery,

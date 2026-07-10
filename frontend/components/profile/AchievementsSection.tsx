@@ -22,7 +22,18 @@ export default function AchievementsSection({
 }: AchievementsSectionProps) {
   return (
     <AccordionSection title="Achievement Milestone Matrix" icon="trophy-outline" defaultExpanded>
-      <Text style={styles.subLabel}>SCUBA MILESTONES</Text>
+      <Text style={styles.subLabel}>STREAKS</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.achievementScrollRow}
+      >
+        {achievements.streaks.map((achievement) => (
+          <AchievementBadge key={achievement.id} achievement={achievement} onPress={onSelectAchievement} />
+        ))}
+      </ScrollView>
+
+      <Text style={[styles.subLabel, styles.subLabelSpaced]}>SCUBA MILESTONES</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -40,6 +51,17 @@ export default function AchievementsSection({
         contentContainerStyle={styles.achievementScrollRow}
       >
         {achievements.snorkel.map((achievement) => (
+          <AchievementBadge key={achievement.id} achievement={achievement} onPress={onSelectAchievement} />
+        ))}
+      </ScrollView>
+
+      <Text style={[styles.subLabel, styles.subLabelSpaced]}>FREEDIVING MILESTONES</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.achievementScrollRow}
+      >
+        {achievements.freediving.map((achievement) => (
           <AchievementBadge key={achievement.id} achievement={achievement} onPress={onSelectAchievement} />
         ))}
       </ScrollView>

@@ -1,6 +1,8 @@
+import { getActivityTypeOption } from "../constants/activityTypes";
 import { colors } from "../constants/theme";
-import { Adventure } from "../types/adventure";
+import { ActivityType, Adventure } from "../types/adventure";
 import { GearItem } from "./profileStorage";
+import { computeLongestStreakDays } from "./streaks";
 
 export interface Achievement {
   id: string;
@@ -12,14 +14,17 @@ export interface Achievement {
 }
 
 export interface AchievementGroups {
+  streaks: Achievement[];
   scuba: Achievement[];
   snorkel: Achievement[];
+  freediving: Achievement[];
   certification: Achievement[];
   global: Achievement[];
 }
 
 const SCUBA_COLOR = colors.achievement.scuba;
 const SNORKEL_COLOR = colors.achievement.snorkel;
+const FREEDIVING_COLOR = colors.achievement.freediving;
 const CERT_COLOR = colors.achievement.certification;
 const GLOBETROTTER_COLOR = colors.achievement.globetrotter;
 const NIGHT_OWL_COLOR = colors.achievement.nightOwl;
@@ -74,7 +79,105 @@ const SNORKEL_TIERS: { threshold: number; name: string; emoji: string }[] = [
   { threshold: 15, name: "Mermaid Status", emoji: "🧜‍♀️" },
 ];
 
+const FREEDIVING_TIERS: { threshold: number; name: string; emoji: string }[] = [
+  { threshold: 1, name: "First Breath Hold", emoji: "🫁" },
+  { threshold: 5, name: "Apnea Apprentice", emoji: "🐬" },
+  { threshold: 10, name: "Deep Breath", emoji: "🌊" },
+  { threshold: 15, name: "Freediving Adept", emoji: "🏅" },
+];
+
 const ELITE_CERTIFICATIONS = ["Rescue Diver", "Divemaster"];
+
+const STREAK_TIERS: { threshold: number; name: string }[] = [
+  { threshold: 7, name: "Weekly Rhythm" },
+  { threshold: 30, name: "Monthly Devotion" },
+];
+
+// One depth/time milestone per activity type, not a full escalator ladder
+// like the dive-count tiers above - a deliberately small, extensible seed
+// set per the month's scope, not an exhaustive one. Thresholds picked to be
+// meaningfully attainable per activity's own norms rather than one
+// one-size-fits-all number (open-water recreational scuba depth limits sit
+// around 18-30m; snorkeling is inherently a surface activity so a shallow
+// duck-dive threshold fits; recreational freediving apnea depth commonly
+// targets ~20m).
+const DEPTH_MILESTONES: Record<ActivityType, { threshold: number; name: string }> = {
+  scuba: { threshold: 30, name: "Deep Explorer" },
+  snorkeling: { threshold: 5, name: "Below the Surface" },
+  freediving: { threshold: 20, name: "Twenty Meter Club" },
+};
+
+const TIME_MILESTONES: Record<ActivityType, { thresholdMinutes: number; name: string }> = {
+  scuba: { thresholdMinutes: 600, name: "10 Hours Underwater" },
+  snorkeling: { thresholdMinutes: 300, name: "5 Hours in the Reef" },
+  freediving: { thresholdMinutes: 180, name: "3 Hours of Breath Holds" },
+};
+
+// Longest-ever streak (not current), matching the permanent/monotonic unlock
+// semantics every other achievement in this file already has - see
+// computeLongestStreakDays' own comment for why this data source was chosen
+// over a "current streak" that could lapse.
+function buildStreakAchievements(adventures: Adventure[]): Achievement[] {
+  const longestStreak = computeLongestStreakDays(adventures);
+  return STREAK_TIERS.map(({ threshold, name }) => {
+    const unlocked = longestStreak >= threshold;
+    return {
+      id: `streak-${threshold}`,
+      name,
+      emoji: "🔥",
+      color: colors.achievement.streak,
+      unlocked,
+      description: unlocked
+        ? `Unlocked! You've logged an adventure ${threshold}+ days in a row.`
+        : `Locked: Log an adventure ${threshold} days in a row (any activity type) to unlock ${name}!`,
+    };
+  });
+}
+
+// Icon/color sourced from activityTypes.ts (not redefined here) so map pins,
+// the log picker, and these badges all agree on one identity per activity.
+function buildDepthAchievement(activityType: ActivityType, adventures: Adventure[]): Achievement {
+  const { threshold, name } = DEPTH_MILESTONES[activityType];
+  const option = getActivityTypeOption(activityType);
+  const deepest = adventures
+    .filter((a) => a.activity_type === activityType)
+    .reduce((max, a) => Math.max(max, a.max_depth_meters), 0);
+  const unlocked = deepest >= threshold;
+  return {
+    id: `${activityType}-depth-${threshold}`,
+    name,
+    emoji: option.markerEmoji,
+    color: option.color,
+    unlocked,
+    description: unlocked
+      ? `Unlocked! Your deepest logged ${option.label} adventure reached ${deepest}m.`
+      : `Locked: Log a ${option.label} adventure reaching ${threshold}m depth to unlock ${name}!`,
+  };
+}
+
+function buildTimeAchievement(activityType: ActivityType, adventures: Adventure[]): Achievement {
+  const { thresholdMinutes, name } = TIME_MILESTONES[activityType];
+  const option = getActivityTypeOption(activityType);
+  const totalMinutes = adventures
+    .filter((a) => a.activity_type === activityType)
+    .reduce((sum, a) => sum + a.duration_minutes, 0);
+  const unlocked = totalMinutes >= thresholdMinutes;
+  const thresholdHours = thresholdMinutes / 60;
+  return {
+    id: `${activityType}-time-${thresholdMinutes}`,
+    name,
+    // A generic clock rather than the activity's own marker emoji - within
+    // the same per-activity scroll row as the depth achievement above, two
+    // badges sharing one emoji would be harder to tell apart at a glance
+    // even though color/label still differ.
+    emoji: "⏱️",
+    color: option.color,
+    unlocked,
+    description: unlocked
+      ? `Unlocked! You've logged ${Math.floor(totalMinutes / 60)}+ hours of ${option.label}.`
+      : `Locked: Log ${thresholdHours} total hours of ${option.label} to unlock ${name}!`,
+  };
+}
 
 // Adventures don't capture a dive start time (the date picker is date-only),
 // so "night" is read from created_at - when the entry was logged - as the
@@ -97,6 +200,7 @@ export function buildAchievements(
 ): AchievementGroups {
   const scubaCount = adventures.filter((a) => a.activity_type === "scuba").length;
   const snorkelCount = adventures.filter((a) => a.activity_type === "snorkeling").length;
+  const freedivingCount = adventures.filter((a) => a.activity_type === "freediving").length;
 
   const scuba: Achievement[] = scubaMilestoneTiers(scubaCount).map(({ threshold, name }) => {
     const unlocked = scubaCount >= threshold;
@@ -112,6 +216,7 @@ export function buildAchievements(
         : `Locked: Log ${remaining} more scuba ${pluralize(remaining, "dive")} to unlock ${name}!`,
     };
   });
+  scuba.push(buildDepthAchievement("scuba", adventures), buildTimeAchievement("scuba", adventures));
 
   const snorkel: Achievement[] = SNORKEL_TIERS.map(({ threshold, name, emoji }) => {
     const unlocked = snorkelCount >= threshold;
@@ -127,6 +232,31 @@ export function buildAchievements(
         : `Locked: Log ${remaining} more snorkeling ${pluralize(remaining, "adventure")} to unlock ${name}!`,
     };
   });
+  snorkel.push(
+    buildDepthAchievement("snorkeling", adventures),
+    buildTimeAchievement("snorkeling", adventures)
+  );
+
+  const freediving: Achievement[] = FREEDIVING_TIERS.map(({ threshold, name, emoji }) => {
+    const unlocked = freedivingCount >= threshold;
+    const remaining = threshold - freedivingCount;
+    return {
+      id: `freediving-${threshold}`,
+      name,
+      emoji,
+      color: FREEDIVING_COLOR,
+      unlocked,
+      description: unlocked
+        ? `Unlocked! You've logged ${freedivingCount} freediving ${pluralize(freedivingCount, "session")}.`
+        : `Locked: Log ${remaining} more freediving ${pluralize(remaining, "session")} to unlock ${name}!`,
+    };
+  });
+  freediving.push(
+    buildDepthAchievement("freediving", adventures),
+    buildTimeAchievement("freediving", adventures)
+  );
+
+  const streaks: Achievement[] = buildStreakAchievements(adventures);
 
   const hasCertification = certifications.length > 0;
   const hasEliteCertification = certifications.some((c) => ELITE_CERTIFICATIONS.includes(c));
@@ -200,5 +330,5 @@ export function buildAchievements(
     },
   ];
 
-  return { scuba, snorkel, certification, global };
+  return { streaks, scuba, snorkel, freediving, certification, global };
 }

@@ -5,7 +5,9 @@ import { depthUnitLabel, UnitSystem } from "../../utils/units";
 import FormField from "./FormField";
 
 interface DiveMetricsFieldsProps {
-  isScuba: boolean;
+  // True for scuba and freediving (both track how deep the diver went);
+  // false for snorkeling, which is surface-based.
+  showMaxDepth: boolean;
   unitSystem: UnitSystem;
   maxDepth: string;
   onChangeMaxDepth: (value: string) => void;
@@ -16,7 +18,7 @@ interface DiveMetricsFieldsProps {
 }
 
 export default function DiveMetricsFields({
-  isScuba,
+  showMaxDepth,
   unitSystem,
   maxDepth,
   onChangeMaxDepth,
@@ -27,7 +29,7 @@ export default function DiveMetricsFields({
 }: DiveMetricsFieldsProps) {
   const isImperial = unitSystem === "imperial";
 
-  if (!isScuba) {
+  if (!showMaxDepth) {
     return (
       <FormField
         label="Duration (min)"

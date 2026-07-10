@@ -62,7 +62,14 @@ export default function AccordionSection({
 
   return (
     <View style={styles.card}>
-      <Pressable onPress={toggle} style={styles.header} hitSlop={4}>
+      <Pressable
+        onPress={toggle}
+        style={styles.header}
+        hitSlop={4}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityState={{ expanded }}
+      >
         <View style={styles.headerLeft}>
           <View style={styles.iconBadge}>
             <Ionicons name={icon} size={16} color={colors.secondary} />

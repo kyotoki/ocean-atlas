@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors, elevation, radius, spacing, typography } from "../../constants/theme";
+import { getActivityTypeOption } from "../../constants/activityTypes";
+import { colors, elevation, radius, spacing, typography, withOpacity } from "../../constants/theme";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { Adventure } from "../../types/adventure";
 import { showAlert } from "../../utils/crossPlatformAlert";
@@ -50,6 +51,7 @@ export default function AdventureDetailModal({
     );
   };
 
+  const activityType = getActivityTypeOption(adventure.activity_type);
   const hasNotes = Boolean(adventure.notes && adventure.notes.trim());
   const hasConditions =
     adventure.water_temp_c != null ||
@@ -62,12 +64,26 @@ export default function AdventureDetailModal({
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <View style={styles.photoWrap}>
             <PhotoCarousel photos={adventure.photos} height={180} />
-            <Pressable style={styles.closeButton} onPress={onClose} hitSlop={10}>
+            <Pressable
+              style={styles.closeButton}
+              onPress={onClose}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+            >
               <Ionicons name="close" size={20} color={colors.text.inverse} />
             </Pressable>
           </View>
 
           <View style={styles.body}>
+            <View
+              style={[styles.activityBadge, { backgroundColor: withOpacity(activityType.color, 0.15) }]}
+            >
+              <Text style={styles.activityBadgeEmoji}>{activityType.markerEmoji}</Text>
+              <Text style={[styles.activityBadgeText, { color: activityType.color }]}>
+                {activityType.label}
+              </Text>
+            </View>
             <Text style={styles.title}>{adventure.title}</Text>
             <Text style={styles.subtitle}>{adventure.location_name}</Text>
 
@@ -177,6 +193,25 @@ const styles = StyleSheet.create({
   },
   body: {
     padding: spacing.lg,
+  },
+  activityBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: spacing.xxs,
+    borderRadius: radius.xl,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+    marginBottom: spacing.sm,
+  },
+  activityBadgeEmoji: {
+    fontSize: typography.size.small,
+  },
+  activityBadgeText: {
+    fontSize: typography.size.caption,
+    fontWeight: typography.weight.bold,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
   },
   title: {
     fontSize: typography.size.title,

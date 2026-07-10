@@ -41,6 +41,13 @@
           "photosPermission": "Svel uses your photo library so you can attach a picture to a logged dive.",
           "cameraPermission": "Svel uses your camera so you can take a photo to attach to a logged dive."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#0B3D91"
+        }
       ]
     ],
     "experiments": {

@@ -1,6 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ActivityType } from "../types/adventure";
+import { QueueFullError } from "./errors";
+
+// A worst-case multi-day offline trip logging a dozen-plus dives a day is
+// still nowhere near this - it exists purely to stop the queue from growing
+// unbounded (with no age-based eviction) if something keeps items from ever
+// syncing. Counts every item regardless of status (pending or failed).
+export const MAX_QUEUE_SIZE = 150;
 
 // The exact POST /adventures/ body shape, minus `photos` - queued photos are
 // tracked separately (see QueuedPhoto) since they need to be uploaded first
@@ -35,6 +42,10 @@ export interface QueuedAdventure {
   photos: QueuedPhoto[];
   status: QueuedAdventureStatus;
   error?: string;
+  // True when `error` failed with a 401/403 - the item won't sync no matter
+  // how many times it's retried until the user signs in again, which is a
+  // distinct situation from any other server rejection.
+  requiresReauth?: boolean;
   queuedAt: string;
 }
 
@@ -65,6 +76,11 @@ export async function enqueueAdventure(
   photos: QueuedPhoto[]
 ): Promise<QueuedAdventure> {
   const queue = await readQueue();
+  if (queue.length >= MAX_QUEUE_SIZE) {
+    throw new QueueFullError(
+      `The offline sync queue is full (${MAX_QUEUE_SIZE} adventures). Reconnect to sync pending items before logging more offline.`
+    );
+  }
   const item: QueuedAdventure = {
     // Timestamp + random suffix rather than a counter - two dives queued in
     // the same millisecond (offline, by hand) is implausible, but this
@@ -88,10 +104,18 @@ export async function removeFromQueue(localId: string): Promise<void> {
 // A "failed" item reached the server and was rejected (validation, auth,
 // etc.) - retrying it unchanged would just fail the same way again, so it's
 // set aside instead of being retried on every reconnect.
-export async function markQueueItemFailed(localId: string, error: string): Promise<void> {
+export async function markQueueItemFailed(
+  localId: string,
+  error: string,
+  options?: { requiresReauth?: boolean }
+): Promise<void> {
   const queue = await readQueue();
   await writeQueue(
-    queue.map((item) => (item.localId === localId ? { ...item, status: "failed", error } : item))
+    queue.map((item) =>
+      item.localId === localId
+        ? { ...item, status: "failed", error, requiresReauth: options?.requiresReauth ?? false }
+        : item
+    )
   );
 }
 

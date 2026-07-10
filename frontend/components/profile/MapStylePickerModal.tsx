@@ -38,6 +38,9 @@ export default function MapStylePickerModal({
                   onSelect(option.value);
                   onClose();
                 }}
+                accessibilityRole="radio"
+                accessibilityLabel={option.label}
+                accessibilityState={{ selected: isSelected }}
               >
                 <Ionicons
                   name={option.icon}

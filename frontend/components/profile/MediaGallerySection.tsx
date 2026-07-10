@@ -2,35 +2,43 @@ import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { colors, radius, spacing, typography } from "../../constants/theme";
 import { Adventure } from "../../types/adventure";
+import EmptyState from "../ui/EmptyState";
 import AccordionSection from "./AccordionSection";
 
 interface MediaGallerySectionProps {
   recentPhotos: Adventure[];
+  onLogAdventure: () => void;
 }
 
-export default function MediaGallerySection({ recentPhotos }: MediaGallerySectionProps) {
+export default function MediaGallerySection({ recentPhotos, onLogAdventure }: MediaGallerySectionProps) {
   return (
     <AccordionSection title="Media & Milestone Gallery" icon="images-outline">
-      <Text style={styles.subLabel}>RECENT PHOTOS</Text>
       {recentPhotos.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.photoRow}
-        >
-          {recentPhotos.map((adventure) => (
-            <View key={adventure.id} style={styles.photoThumbWrap}>
-              <Image source={{ uri: adventure.photos[0] }} style={styles.photoThumb} />
-              <View style={styles.photoDurationPill}>
-                <Text style={styles.photoDurationPillText}>⏱️ {adventure.duration_minutes}m</Text>
+        <>
+          <Text style={styles.subLabel}>RECENT PHOTOS</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.photoRow}
+          >
+            {recentPhotos.map((adventure) => (
+              <View key={adventure.id} style={styles.photoThumbWrap}>
+                <Image source={{ uri: adventure.photos[0] }} style={styles.photoThumb} />
+                <View style={styles.photoDurationPill}>
+                  <Text style={styles.photoDurationPillText}>⏱️ {adventure.duration_minutes}m</Text>
+                </View>
               </View>
-            </View>
-          ))}
-        </ScrollView>
+            ))}
+          </ScrollView>
+        </>
       ) : (
-        <Text style={styles.emptyGalleryText}>
-          No photos yet. Add one next time you log an adventure.
-        </Text>
+        <EmptyState
+          size="compact"
+          icon={{ name: "camera-outline" }}
+          title="No photos yet"
+          message="Add a photo next time you log an adventure to build your gallery."
+          action={{ label: "Log Adventure", onPress: onLogAdventure }}
+        />
       )}
     </AccordionSection>
   );
@@ -74,10 +82,5 @@ const styles = StyleSheet.create({
     fontSize: typography.size.caption,
     fontWeight: typography.weight.bold,
     color: colors.text.inverse,
-  },
-  emptyGalleryText: {
-    fontSize: typography.size.small,
-    color: colors.text.tertiary,
-    fontStyle: "italic",
   },
 });

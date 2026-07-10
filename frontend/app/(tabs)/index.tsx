@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AdventureDetailModal from "../../components/map/AdventureDetailModal";
 import DiveMapView from "../../components/map/DiveMapView";
 import MapSkeleton from "../../components/map/MapSkeleton";
+import EmptyState from "../../components/ui/EmptyState";
 import PendingSyncBadge from "../../components/ui/PendingSyncBadge";
 import WaveSpinner from "../../components/ui/WaveSpinner";
 import { ENDPOINTS } from "../../constants/api";
@@ -15,6 +16,7 @@ import { TAB_BAR_HEIGHT } from "../../constants/layout";
 import { Adventure } from "../../types/adventure";
 import { useAuthedFetch } from "../../utils/api";
 import { showAlert } from "../../utils/crossPlatformAlert";
+import { syncStreakReminder } from "../../utils/notifications";
 
 export default function OceanMapScreen() {
   const router = useRouter();
@@ -41,6 +43,10 @@ export default function OceanMapScreen() {
       }
       const data: Adventure[] = await response.json();
       setAdventures(data);
+      // Map is the app's home tab, so its own focus effect (below) is the
+      // best available proxy for "app opened" - re-anchors the streak
+      // reminder to the user's true most recent adventure every time.
+      syncStreakReminder(data);
     } catch (err) {
       setError(
         err instanceof Error
@@ -98,21 +104,12 @@ export default function OceanMapScreen() {
   if (adventures.length === 0) {
     return (
       <SafeAreaView style={styles.welcomeContainer} edges={["bottom"]}>
-        <View style={styles.welcomeIconBadge}>
-          <Text style={styles.welcomeEmoji}>🤿</Text>
-        </View>
-        <Text style={styles.welcomeTitle}>Welcome to Svel!</Text>
-        <Text style={styles.welcomeSubtitle}>
-          Enter your first adventure to map your footprint.
-        </Text>
-        <Pressable
-          style={styles.welcomeButton}
-          onPress={() => router.push("/log")}
-          hitSlop={8}
-        >
-          <Ionicons name="add-circle" size={18} color="#FFFFFF" />
-          <Text style={styles.welcomeButtonText}>Log Adventure</Text>
-        </Pressable>
+        <EmptyState
+          icon={{ emoji: "🤿" }}
+          title="Welcome to Svel!"
+          message="Enter your first adventure to map your footprint."
+          action={{ label: "Log Adventure", onPress: () => router.push("/log") }}
+        />
       </SafeAreaView>
     );
   }
@@ -131,6 +128,9 @@ export default function OceanMapScreen() {
           onPress={() => fetchAdventures(true)}
           disabled={isRefreshing}
           hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Refresh adventures"
+          accessibilityState={{ disabled: isRefreshing, busy: isRefreshing }}
         >
           {isRefreshing ? (
             <WaveSpinner size="small" color="#0B3D91" />
@@ -145,12 +145,16 @@ export default function OceanMapScreen() {
           adventures={adventures}
           onSelectAdventure={setSelectedAdventure}
           showConditions={showConditions}
+          selectedAdventureId={selectedAdventure?.id ?? null}
         />
 
         <Pressable
           onPress={() => setShowConditions((prev) => !prev)}
           hitSlop={8}
           style={[styles.conditionsToggle, showConditions && styles.conditionsToggleActive]}
+          accessibilityRole="button"
+          accessibilityLabel="Show ocean conditions on map pins"
+          accessibilityState={{ selected: showConditions }}
         >
           <Ionicons
             name="thermometer-outline"
@@ -261,54 +265,11 @@ const styles = StyleSheet.create({
     color: "#5A6B87",
     textAlign: "center",
   },
+  // EmptyState (rendered inside) supplies its own centering/padding for the
+  // "full" size - this wrapper only adds the screen-specific bottom clearance
+  // for the floating tab bar.
   welcomeContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 32,
-    paddingBottom: 32 + TAB_BAR_HEIGHT,
-  },
-  welcomeIconBadge: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: "#EAF6FA",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  welcomeEmoji: {
-    fontSize: 38,
-  },
-  welcomeTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#101828",
-    textAlign: "center",
-  },
-  welcomeSubtitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#5A6B87",
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 28,
-    lineHeight: 20,
-    maxWidth: 280,
-  },
-  welcomeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#0B3D91",
-    borderRadius: 14,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-  },
-  welcomeButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
+    paddingBottom: TAB_BAR_HEIGHT,
   },
 });

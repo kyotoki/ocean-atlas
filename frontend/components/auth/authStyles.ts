@@ -1,7 +1,12 @@
 import { StyleSheet } from "react-native";
 
 export const DIVE_CYAN = "#06B6D4";
-export const PLACEHOLDER_COLOR = "#6E93A8";
+// Lightened from #6E93A8 - against the OceanAuthLayout gradient's lightest
+// stop (#0B3D5C, blended under the input's translucent white fill) the old
+// color measured only 2.75:1, below WCAG AA's 4.5:1 for normal text. This
+// value holds >=4.5:1 across the gradient's full range (computed via actual
+// relative-luminance contrast math), not just at its darkest stop.
+export const PLACEHOLDER_COLOR = "#A4BBC8";
 
 export const authStyles = StyleSheet.create({
   input: {

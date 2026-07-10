@@ -27,6 +27,8 @@ export default function SegmentedControl<T extends string>({
             key={option.value}
             onPress={() => onChange(option.value)}
             style={[styles.segment, isActive && styles.segmentActive]}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: isActive }}
           >
             <Text style={[styles.segmentText, isActive && styles.segmentTextActive]}>
               {option.label}

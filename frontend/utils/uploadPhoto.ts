@@ -40,7 +40,7 @@ export async function uploadPhoto(
   });
 
   if (!response.ok) {
-    throw new ServerRejectedError(`Photo upload failed with status ${response.status}`);
+    throw new ServerRejectedError(`Photo upload failed with status ${response.status}`, response.status);
   }
 
   const data: { url: string } = await response.json();

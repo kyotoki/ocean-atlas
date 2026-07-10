@@ -59,6 +59,19 @@ def test_scuba_specific_fields_are_persisted():
     assert body["gas_mix"] == "Nitrox 32"
 
 
+def test_adventure_can_be_logged_as_freediving_with_scuba_fields_left_optional():
+    as_user("user_a")
+    resp = create_dive(activity_type="freediving", max_depth_meters=22.0, duration_minutes=3)
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["activity_type"] == "freediving"
+    # Scuba-only gear fields are optional for every activity type - not
+    # supplying them here should not be an error, and they should come back
+    # as null rather than some scuba-flavored default.
+    assert body["tank_pressure_bar"] is None
+    assert body["gas_mix"] is None
+
+
 def test_activity_stats_for_user_with_no_trips_of_that_type():
     as_user("user_a")
     resp = client.get("/stats/by-activity", params={"activity_type": "snorkeling"})
@@ -97,6 +110,31 @@ def test_activity_stats_only_aggregate_matching_activity_type():
         "deepest_meters": 4.0,
         "average_bottom_time_minutes": 60.0,
         "favorite_site": "Shallow Bay",
+    }
+
+
+def test_activity_stats_group_freediving_separately_from_scuba():
+    as_user("user_a")
+    create_dive(activity_type="scuba", max_depth_meters=30.0, duration_minutes=40)
+    create_dive(
+        activity_type="freediving",
+        location_name="Blue Hole",
+        max_depth_meters=22.0,
+        duration_minutes=3,
+    )
+
+    scuba_resp = client.get("/stats/by-activity", params={"activity_type": "scuba"})
+    assert scuba_resp.json()["total_trips"] == 1
+    assert scuba_resp.json()["deepest_meters"] == 30.0
+
+    freediving_resp = client.get("/stats/by-activity", params={"activity_type": "freediving"})
+    assert freediving_resp.json() == {
+        "activity_type": "freediving",
+        "total_trips": 1,
+        "total_minutes": 3,
+        "deepest_meters": 22.0,
+        "average_bottom_time_minutes": 3.0,
+        "favorite_site": "Blue Hole",
     }
 
 

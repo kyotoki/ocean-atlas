@@ -2,7 +2,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Redirect, useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -30,6 +30,8 @@ export default function OnboardingScreen() {
   const { user, isLoaded, isSignedIn } = useUser();
   const router = useRouter();
   const authedFetch = useAuthedFetch();
+  const lastNameInputRef = useRef<TextInput>(null);
+  const nicknameInputRef = useRef<TextInput>(null);
 
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
   const [lastName, setLastName] = useState(user?.lastName ?? "");
@@ -117,7 +119,12 @@ export default function OnboardingScreen() {
       title="Set Up Your Profile"
       subtitle="Tell us a bit about yourself before you dive in"
     >
-      <Pressable style={styles.photoRow} onPress={onChoosePhoto}>
+      <Pressable
+        style={styles.photoRow}
+        onPress={onChoosePhoto}
+        accessibilityRole="button"
+        accessibilityLabel="Choose profile photo, optional"
+      >
         {photo ? (
           <Image source={{ uri: photo.uri }} style={styles.photo} />
         ) : (
@@ -132,25 +139,50 @@ export default function OnboardingScreen() {
         style={authStyles.input}
         placeholder="First Name"
         placeholderTextColor={PLACEHOLDER_COLOR}
+        accessibilityLabel="First name"
         value={firstName}
         onChangeText={setFirstName}
+        autoComplete="given-name"
+        textContentType="givenName"
+        returnKeyType="next"
+        blurOnSubmit={false}
+        onSubmitEditing={() => lastNameInputRef.current?.focus()}
       />
       <TextInput
+        ref={lastNameInputRef}
         style={authStyles.input}
         placeholder="Last Name"
         placeholderTextColor={PLACEHOLDER_COLOR}
+        accessibilityLabel="Last name"
         value={lastName}
         onChangeText={setLastName}
+        autoComplete="family-name"
+        textContentType="familyName"
+        returnKeyType="next"
+        blurOnSubmit={false}
+        onSubmitEditing={() => nicknameInputRef.current?.focus()}
       />
       <TextInput
+        ref={nicknameInputRef}
         style={authStyles.input}
         placeholder="Nickname (Optional)"
         placeholderTextColor={PLACEHOLDER_COLOR}
+        accessibilityLabel="Nickname, optional"
         value={nickname}
         onChangeText={setNickname}
+        autoComplete="nickname"
+        textContentType="nickname"
+        returnKeyType="done"
       />
 
-      <Pressable style={styles.countryRow} onPress={() => setIsCountryPickerVisible(true)}>
+      <Pressable
+        style={styles.countryRow}
+        onPress={() => setIsCountryPickerVisible(true)}
+        accessibilityRole="button"
+        accessibilityLabel={
+          homeCountry ? `Country of origin, ${homeCountry.name}` : "Country of origin, not set"
+        }
+      >
         <Ionicons name="earth-outline" size={16} color="#8FB8CE" />
         {homeCountry ? (
           <>
@@ -167,12 +199,19 @@ export default function OnboardingScreen() {
         <Text style={styles.emailText}>{email}</Text>
       </View>
 
-      {error ? <Text style={authStyles.error}>{error}</Text> : null}
+      {error ? (
+        <Text style={authStyles.error} accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
 
       <Pressable
         style={[authStyles.button, isSubmitting && authStyles.buttonDisabled]}
         onPress={handleContinue}
         disabled={isSubmitting}
+        accessibilityRole="button"
+        accessibilityLabel="Continue"
+        accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
       >
         {isSubmitting ? (
           <ActivityIndicator color="#04202D" />

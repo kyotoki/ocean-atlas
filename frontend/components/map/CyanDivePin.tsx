@@ -1,16 +1,22 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, View } from "react-native";
 
+import { getActivityTypeOption } from "../../constants/activityTypes";
 import { colors, radius, spacing, typography, withOpacity } from "../../constants/theme";
-
-export const DIVE_PIN_CYAN = colors.accent;
-export const DIVE_PIN_DEEP = colors.secondary;
+import { ActivityType } from "../../types/adventure";
 
 interface CyanDivePinProps {
+  activityType: ActivityType;
   badgeText?: string;
+  /** True while this adventure's detail modal is open, for a brief visual
+   * "you tapped this one" state - useful once several pins sit close
+   * together. */
+  isSelected?: boolean;
 }
 
-export default function CyanDivePin({ badgeText }: CyanDivePinProps) {
+export default function CyanDivePin({ activityType, badgeText, isSelected = false }: CyanDivePinProps) {
+  const { markerEmoji, color } = getActivityTypeOption(activityType);
+
   return (
     <View style={styles.wrapper}>
       {badgeText ? (
@@ -20,17 +26,29 @@ export default function CyanDivePin({ badgeText }: CyanDivePinProps) {
           </Text>
         </View>
       ) : null}
-      <View style={styles.pinBody}>
-        <View style={styles.glow} />
-        <LinearGradient
-          colors={[DIVE_PIN_CYAN, DIVE_PIN_DEEP]}
-          start={{ x: 0.3, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
-          style={styles.circle}
-        >
-          <Text style={styles.emoji}>🤿</Text>
-        </LinearGradient>
-        <View style={styles.tail} />
+      {/* Padded on every side but the bottom, so the tappable region is
+       * comfortably bigger than the visual glyph without shifting the
+       * anchored point, which sits at this view's bottom-center (the tail
+       * tip) via the parent Marker's anchor={{x:0.5,y:1}}. */}
+      <View style={styles.hitArea}>
+        <View style={styles.pinBody}>
+          <View
+            style={[
+              styles.glow,
+              isSelected && styles.glowSelected,
+              { backgroundColor: withOpacity(color, isSelected ? 0.4 : 0.25) },
+            ]}
+          />
+          <LinearGradient
+            colors={[color, colors.secondary]}
+            start={{ x: 0.3, y: 0 }}
+            end={{ x: 0.8, y: 1 }}
+            style={[styles.circle, isSelected && styles.circleSelected]}
+          >
+            <Text style={styles.emoji}>{markerEmoji}</Text>
+          </LinearGradient>
+          <View style={styles.tail} />
+        </View>
       </View>
     </View>
   );
@@ -41,7 +59,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   badge: {
-    backgroundColor: DIVE_PIN_DEEP,
+    backgroundColor: colors.secondary,
     borderWidth: 1,
     borderColor: withOpacity(colors.surface.card, 0.5),
     borderRadius: radius.sm,
@@ -63,6 +81,10 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     letterSpacing: 0.2,
   },
+  hitArea: {
+    paddingHorizontal: spacing.sm,
+    paddingTop: spacing.sm,
+  },
   pinBody: {
     alignItems: "center",
   },
@@ -72,7 +94,11 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: radius.full,
-    backgroundColor: withOpacity(colors.accent, 0.25),
+  },
+  glowSelected: {
+    top: -7,
+    width: 46,
+    height: 46,
   },
   circle: {
     width: 32,
@@ -89,6 +115,15 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  // Border thickness only, deliberately not a width/height change - growing
+  // the circle's own box would push the tail down in flow layout (a taller
+  // flex child grows downward from its own top, not centered), which would
+  // visibly shift the pin away from its anchored coordinate. The enlarged
+  // glow above is absolutely positioned, so resizing that carries no such
+  // risk and does the visual "selected" lift on its own.
+  circleSelected: {
+    borderWidth: 3,
+  },
   emoji: {
     fontSize: typography.size.body,
     lineHeight: 17,
@@ -101,7 +136,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 7,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
-    borderTopColor: DIVE_PIN_DEEP,
+    borderTopColor: colors.secondary,
     marginTop: -2,
   },
 });

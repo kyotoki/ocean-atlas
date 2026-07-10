@@ -10,7 +10,7 @@ interface SvelProRowProps {
 
 export default function SvelProRow({ onPress }: SvelProRowProps) {
   return (
-    <Pressable onPress={onPress} style={styles.wrap}>
+    <Pressable onPress={onPress} style={styles.wrap} accessibilityRole="button">
       <LinearGradient
         colors={[colors.secondary, colors.premiumTextStrong, colors.premiumText]}
         start={{ x: 0, y: 0 }}

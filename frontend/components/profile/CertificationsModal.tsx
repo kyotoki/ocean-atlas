@@ -23,7 +23,7 @@ export default function CertificationsModal({
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <View style={styles.headerRow}>
             <Text style={styles.title}>My Certifications & Licenses</Text>
-            <Pressable onPress={onClose} hitSlop={10}>
+            <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close">
               <Ionicons name="close" size={20} color={colors.text.secondary} />
             </Pressable>
           </View>
@@ -38,6 +38,8 @@ export default function CertificationsModal({
                 key={cert.value}
                 style={styles.row}
                 onPress={() => onToggle(cert.value)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked }}
               >
                 <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
                   {checked && <Ionicons name="checkmark" size={14} color={colors.text.inverse} />}

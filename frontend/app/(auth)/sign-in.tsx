@@ -79,6 +79,7 @@ export default function SignInScreen() {
           style={authStyles.input}
           placeholder="Verification code"
           placeholderTextColor={PLACEHOLDER_COLOR}
+          accessibilityLabel="Verification code"
           keyboardType="number-pad"
           value={code}
           onChangeText={setCode}
@@ -86,13 +87,20 @@ export default function SignInScreen() {
           onSubmitEditing={onVerifyPress}
         />
 
-        {error ? <Text style={authStyles.error}>{error}</Text> : null}
+        {error ? (
+          <Text style={authStyles.error} accessibilityLiveRegion="polite">
+            {error}
+          </Text>
+        ) : null}
 
         <TouchableOpacity
           style={[authStyles.button, isSubmitting && authStyles.buttonDisabled]}
           onPress={onVerifyPress}
           disabled={isSubmitting}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Verify"
+          accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
         >
           {isSubmitting ? (
             <ActivityIndicator color="#04202D" />
@@ -121,6 +129,7 @@ export default function SignInScreen() {
         style={authStyles.input}
         placeholder="Email"
         placeholderTextColor={PLACEHOLDER_COLOR}
+        accessibilityLabel="Email"
         autoCapitalize="none"
         autoComplete="email"
         keyboardType="email-address"
@@ -135,6 +144,7 @@ export default function SignInScreen() {
         style={authStyles.input}
         placeholder="Password"
         placeholderTextColor={PLACEHOLDER_COLOR}
+        accessibilityLabel="Password"
         secureTextEntry
         autoCapitalize="none"
         value={password}
@@ -143,13 +153,20 @@ export default function SignInScreen() {
         onSubmitEditing={onSignInPress}
       />
 
-      {error ? <Text style={authStyles.error}>{error}</Text> : null}
+      {error ? (
+        <Text style={authStyles.error} accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
 
       <TouchableOpacity
         style={[authStyles.button, isSubmitting && authStyles.buttonDisabled]}
         onPress={onSignInPress}
         disabled={isSubmitting}
         activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Sign in"
+        accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
       >
         {isSubmitting ? (
           <ActivityIndicator color="#04202D" />

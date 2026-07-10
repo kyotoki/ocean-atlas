@@ -10,25 +10,29 @@ import PersonalMapSection from "../../components/profile/PersonalMapSection";
 import ProfileCoreCard from "../../components/profile/ProfileCoreCard";
 import ProfileHeader from "../../components/profile/ProfileHeader";
 import ProfileModals from "../../components/profile/ProfileModals";
+import ProfileSkeleton from "../../components/profile/ProfileSkeleton";
 import SettingsRow from "../../components/profile/SettingsRow";
 import PendingSyncBadge from "../../components/ui/PendingSyncBadge";
-import WaveSpinner from "../../components/ui/WaveSpinner";
 import { TAB_BAR_HEIGHT } from "../../constants/layout";
 import { colors, elevation, radius, spacing, typography } from "../../constants/theme";
 import { useProfileData } from "../../hooks/useProfileData";
-import { ActivityType } from "../../types/adventure";
+import { ActivityFilter } from "../../types/adventure";
 import "../../utils/enableLayoutAnimation";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const profile = useProfileData();
 
-  const handleActivityTabChange = (next: ActivityType) => {
+  const handleActivityTabChange = (next: ActivityFilter) => {
     // Scuba and Snorkeling show a different set/count of StatCards, so this
     // keeps the swap a soft fade rather than an instant jump.
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     profile.handleActivityTabChange(next);
   };
+
+  // Shared by the "Add New Adventure" row and every empty state's CTA below
+  // (Analytics/Map/Gallery) - all of them mean the same thing here.
+  const handleLogAdventure = () => router.push("/log");
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
@@ -49,9 +53,7 @@ export default function ProfileScreen() {
         )}
 
         {profile.isLoading ? (
-          <View style={styles.centered}>
-            <WaveSpinner size="large" color={colors.primary} />
-          </View>
+          <ProfileSkeleton />
         ) : profile.error ? (
           <View style={styles.centered}>
             <Ionicons name="cloud-offline-outline" size={36} color={colors.error} />
@@ -68,7 +70,10 @@ export default function ProfileScreen() {
               onActivityTabChange={handleActivityTabChange}
               scubaStats={profile.scubaStats}
               snorkelingStats={profile.snorkelingStats}
+              freedivingStats={profile.freedivingStats}
+              allStats={profile.allStats}
               unitSystem={profile.unitSystem}
+              onLogAdventure={handleLogAdventure}
             />
 
             <AchievementsSection
@@ -83,14 +88,16 @@ export default function ProfileScreen() {
               onSelectAdventure={profile.setSelectedAdventure}
               isMapExpanded={profile.isMapExpanded}
               onExpandedChange={profile.setIsMapExpanded}
+              selectedAdventureId={profile.selectedAdventure?.id ?? null}
+              onLogAdventure={handleLogAdventure}
             />
 
-            <MediaGallerySection recentPhotos={profile.recentPhotos} />
+            <MediaGallerySection recentPhotos={profile.recentPhotos} onLogAdventure={handleLogAdventure} />
           </>
         )}
 
         <View style={styles.utilitiesCard}>
-          <SettingsRow icon="add-circle" label="Add New Adventure" onPress={() => router.push("/log")} />
+          <SettingsRow icon="add-circle" label="Add New Adventure" onPress={handleLogAdventure} />
         </View>
       </ScrollView>
 

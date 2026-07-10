@@ -42,7 +42,11 @@ export default function ProfileCoreCard({ profile, onUpdate }: ProfileCoreCardPr
       />
 
       <Text style={styles.label}>HOME COUNTRY</Text>
-      <Pressable style={styles.countryRow} onPress={() => setIsCountryPickerVisible(true)}>
+      <Pressable
+        style={styles.countryRow}
+        onPress={() => setIsCountryPickerVisible(true)}
+        accessibilityRole="button"
+      >
         {homeCountry ? (
           <>
             <Text style={styles.flag}>{countryCodeToFlag(homeCountry.code)}</Text>
@@ -68,6 +72,8 @@ export default function ProfileCoreCard({ profile, onUpdate }: ProfileCoreCardPr
               key={cert.value}
               onPress={() => toggleCertification(cert.value)}
               style={[styles.chip, selected && styles.chipSelected]}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: selected }}
             >
               <Ionicons
                 name="ribbon-outline"

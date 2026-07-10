@@ -5,9 +5,11 @@ import {
   enqueueAdventure,
   getQueue,
   markQueueItemFailed,
+  MAX_QUEUE_SIZE,
   QueuedAdventurePayload,
   removeFromQueue,
 } from "../adventureQueue";
+import { QueueFullError } from "../errors";
 
 beforeEach(async () => {
   await AsyncStorage.clear();
@@ -81,4 +83,43 @@ test("photos are stored alongside the payload", async () => {
   const item = await enqueueAdventure(PAYLOAD, photos);
 
   expect(item.photos).toEqual(photos);
+});
+
+test("enqueueAdventure accepts items up to MAX_QUEUE_SIZE", async () => {
+  for (let i = 0; i < MAX_QUEUE_SIZE; i++) {
+    await enqueueAdventure(PAYLOAD, []);
+  }
+
+  expect(await getQueue()).toHaveLength(MAX_QUEUE_SIZE);
+});
+
+test("enqueueAdventure throws QueueFullError once the queue is at MAX_QUEUE_SIZE, without adding the item", async () => {
+  for (let i = 0; i < MAX_QUEUE_SIZE; i++) {
+    await enqueueAdventure(PAYLOAD, []);
+  }
+
+  await expect(enqueueAdventure(PAYLOAD, [])).rejects.toBeInstanceOf(QueueFullError);
+  expect(await getQueue()).toHaveLength(MAX_QUEUE_SIZE);
+});
+
+test("enqueueAdventure counts failed items toward the cap, not just pending ones", async () => {
+  for (let i = 0; i < MAX_QUEUE_SIZE - 1; i++) {
+    await enqueueAdventure(PAYLOAD, []);
+  }
+  const last = await enqueueAdventure(PAYLOAD, []);
+  await markQueueItemFailed(last.localId, "rejected");
+
+  await expect(enqueueAdventure(PAYLOAD, [])).rejects.toBeInstanceOf(QueueFullError);
+});
+
+test("removing an item frees up room in a full queue", async () => {
+  const items = [];
+  for (let i = 0; i < MAX_QUEUE_SIZE; i++) {
+    items.push(await enqueueAdventure(PAYLOAD, []));
+  }
+
+  await removeFromQueue(items[0].localId);
+
+  await expect(enqueueAdventure(PAYLOAD, [])).resolves.toBeTruthy();
+  expect(await getQueue()).toHaveLength(MAX_QUEUE_SIZE);
 });

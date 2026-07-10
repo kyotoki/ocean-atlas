@@ -24,7 +24,7 @@ export default function PrivacyControlsModal({ visible, onClose }: PrivacyContro
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <View style={styles.headerRow}>
             <Text style={styles.title}>Privacy Controls</Text>
-            <Pressable onPress={onClose} hitSlop={10}>
+            <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close">
               <Ionicons name="close" size={20} color={colors.text.secondary} />
             </Pressable>
           </View>
@@ -34,7 +34,7 @@ export default function PrivacyControlsModal({ visible, onClose }: PrivacyContro
               <Text style={styles.rowLabel}>Public Ocean Map</Text>
               <Text style={styles.rowSubtext}>Let other divers see your dive pins</Text>
             </View>
-            <Switch value={publicMap} onValueChange={setPublicMap} />
+            <Switch value={publicMap} onValueChange={setPublicMap} accessibilityLabel="Public Ocean Map" />
           </View>
 
           <View style={styles.row}>
@@ -42,7 +42,11 @@ export default function PrivacyControlsModal({ visible, onClose }: PrivacyContro
               <Text style={styles.rowLabel}>Public Adventure Log</Text>
               <Text style={styles.rowSubtext}>Let other divers see your logged trips</Text>
             </View>
-            <Switch value={publicLogs} onValueChange={setPublicLogs} />
+            <Switch
+              value={publicLogs}
+              onValueChange={setPublicLogs}
+              accessibilityLabel="Public Adventure Log"
+            />
           </View>
 
           <Text style={styles.note}>

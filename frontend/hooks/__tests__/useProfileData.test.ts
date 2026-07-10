@@ -68,6 +68,7 @@ const ADVENTURES = [
 ];
 const SCUBA_STATS = { activity_type: "scuba", total_trips: 5, total_minutes: 200, deepest_meters: 30, average_bottom_time_minutes: 40, favorite_site: "Blue Hole" };
 const SNORKEL_STATS = { activity_type: "snorkeling", total_trips: 2, total_minutes: 60, deepest_meters: null, average_bottom_time_minutes: null, favorite_site: null };
+const FREEDIVING_STATS = { activity_type: "freediving", total_trips: 3, total_minutes: 45, deepest_meters: 22, average_bottom_time_minutes: 2, favorite_site: "Blue Hole" };
 
 function okJson(data: unknown) {
   return { ok: true, status: 200, json: async () => data };
@@ -83,7 +84,8 @@ describe("viewing stats", () => {
     mockAuthedFetch
       .mockResolvedValueOnce(okJson(ADVENTURES))
       .mockResolvedValueOnce(okJson(SCUBA_STATS))
-      .mockResolvedValueOnce(okJson(SNORKEL_STATS));
+      .mockResolvedValueOnce(okJson(SNORKEL_STATS))
+      .mockResolvedValueOnce(okJson(FREEDIVING_STATS));
 
     const { result } = renderHook(() => useProfileData());
 
@@ -94,15 +96,17 @@ describe("viewing stats", () => {
     expect(result.current.adventures).toEqual(ADVENTURES);
     expect(result.current.scubaStats).toEqual(SCUBA_STATS);
     expect(result.current.snorkelingStats).toEqual(SNORKEL_STATS);
+    expect(result.current.freedivingStats).toEqual(FREEDIVING_STATS);
     expect(result.current.error).toBeNull();
-    expect(mockAuthedFetch).toHaveBeenCalledTimes(3);
+    expect(mockAuthedFetch).toHaveBeenCalledTimes(4);
   });
 
   test("surfaces an error and stops loading when a stats request fails", async () => {
     mockAuthedFetch
       .mockResolvedValueOnce(okJson(ADVENTURES))
       .mockResolvedValueOnce({ ok: false, status: 500 })
-      .mockResolvedValueOnce(okJson(SNORKEL_STATS));
+      .mockResolvedValueOnce(okJson(SNORKEL_STATS))
+      .mockResolvedValueOnce(okJson(FREEDIVING_STATS));
 
     const { result } = renderHook(() => useProfileData());
 

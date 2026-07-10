@@ -68,7 +68,7 @@ export default function SettingsMenuModal({
         <Pressable style={styles.panelInner} onPress={(e) => e.stopPropagation()}>
           <View style={styles.headerRow}>
             <Text style={styles.title}>Settings</Text>
-            <Pressable onPress={onClose} hitSlop={10}>
+            <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close">
               <Ionicons name="close" size={22} color={colors.text.secondary} />
             </Pressable>
           </View>

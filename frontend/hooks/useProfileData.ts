@@ -6,8 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ENDPOINTS } from "../constants/api";
 import { usePreferences } from "../contexts/PreferencesContext";
-import { ActivityStats, ActivityType, Adventure } from "../types/adventure";
+import { ActivityFilter, ActivityStats, Adventure } from "../types/adventure";
 import { Achievement, buildAchievements } from "../utils/achievements";
+import { buildCombinedActivityStats } from "../utils/activityStats";
 import { useAuthedFetch } from "../utils/api";
 import { countryCodeToFlag, COUNTRIES } from "../utils/countries";
 import { showAlert } from "../utils/crossPlatformAlert";
@@ -29,7 +30,8 @@ export function useProfileData() {
 
   const [scubaStats, setScubaStats] = useState<ActivityStats | null>(null);
   const [snorkelingStats, setSnorkelingStats] = useState<ActivityStats | null>(null);
-  const [activeActivityTab, setActiveActivityTab] = useState<ActivityType>("scuba");
+  const [freedivingStats, setFreedivingStats] = useState<ActivityStats | null>(null);
+  const [activeActivityTab, setActiveActivityTab] = useState<ActivityFilter>("scuba");
   const [adventures, setAdventures] = useState<Adventure[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,16 +97,22 @@ export function useProfileData() {
     [adventures, localProfile.gear, localProfile.certifications]
   );
 
+  // "All activities" has no backend endpoint of its own - it's just every
+  // adventure already loaded, aggregated the same way the per-activity
+  // stats are shaped, computed client-side rather than adding a new fetch.
+  const allStats = useMemo(() => buildCombinedActivityStats(adventures), [adventures]);
+
   const fetchProfileData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const [adventuresResponse, scubaResponse, snorkelingResponse] = await Promise.all([
+      const [adventuresResponse, scubaResponse, snorkelingResponse, freedivingResponse] = await Promise.all([
         authedFetch(ENDPOINTS.adventures),
         authedFetch(ENDPOINTS.statsByActivity("scuba")),
         authedFetch(ENDPOINTS.statsByActivity("snorkeling")),
+        authedFetch(ENDPOINTS.statsByActivity("freediving")),
       ]);
-      for (const response of [adventuresResponse, scubaResponse, snorkelingResponse]) {
+      for (const response of [adventuresResponse, scubaResponse, snorkelingResponse, freedivingResponse]) {
         if (!response.ok) {
           throw new Error(`Server responded with status ${response.status}`);
         }
@@ -112,6 +120,7 @@ export function useProfileData() {
       setAdventures(await adventuresResponse.json());
       setScubaStats(await scubaResponse.json());
       setSnorkelingStats(await snorkelingResponse.json());
+      setFreedivingStats(await freedivingResponse.json());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to reach the Svel server.");
     } finally {
@@ -178,6 +187,7 @@ export function useProfileData() {
           setAdventures([]);
           setScubaStats(null);
           setSnorkelingStats(null);
+          setFreedivingStats(null);
           signOut();
         },
       },
@@ -209,7 +219,7 @@ export function useProfileData() {
     setIsSvelProModalVisible(true);
   };
 
-  const handleActivityTabChange = (next: ActivityType) => {
+  const handleActivityTabChange = (next: ActivityFilter) => {
     setActiveActivityTab(next);
   };
 
@@ -225,6 +235,8 @@ export function useProfileData() {
     isProfileLoaded,
     scubaStats,
     snorkelingStats,
+    freedivingStats,
+    allStats,
     activeActivityTab,
     adventures,
     isLoading,
