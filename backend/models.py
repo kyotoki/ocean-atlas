@@ -159,7 +159,12 @@ class ContentReport(Base):
     __tablename__ = "content_reports"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    reporter_user_id = Column(String, nullable=False, index=True)
+    # Nullable: a real report (see routes/reports.py) always sets this, but
+    # account deletion (routes/account.py's delete_my_account) anonymizes it
+    # to None rather than deleting the row - the report itself is a safety
+    # record that should outlive the reporter's account, same reasoning as
+    # the adventure_id FK below outliving the reported adventure.
+    reporter_user_id = Column(String, nullable=True, index=True)
     # Nullable + SET NULL (not CASCADE): a report is a moderation audit
     # record in its own right - e.g. "this was reported and then removed
     # because of it" - so it should outlive the adventure it was filed

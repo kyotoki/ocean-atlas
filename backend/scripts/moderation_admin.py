@@ -223,7 +223,8 @@ def _cmd_reports_list(args: argparse.Namespace) -> None:
         for r in reports:
             print(
                 f"[{r.id}] adventure_id={r.adventure_id} photo_url={r.photo_url or '(whole adventure)'} "
-                f"reason={r.reason} reported_by={r.reporter_user_id} at={r.created_at.isoformat()}"
+                f"reason={r.reason} reported_by={r.reporter_user_id or '[deleted user]'} "
+                f"at={r.created_at.isoformat()}"
             )
             if r.details:
                 print(f"      details: {r.details}")

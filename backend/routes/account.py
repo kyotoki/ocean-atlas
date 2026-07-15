@@ -32,12 +32,11 @@ def delete_my_account(
     no longer authenticate to retry, permanently orphaning whatever local
     data was left.
 
-    ContentReport rows where this user is the reporter (not the reported
-    content) are deleted too, on the read that "everything user-owned"
-    includes reports they filed - worth reconsidering later, since it also
-    means losing a piece of moderation audit trail (see ContentReport's own
-    docstring in models.py) if the reported content is someone else's and
-    still exists.
+    ContentReport rows where this user is the reporter are anonymized (their
+    reporter_user_id set to None), not deleted - the report is a safety
+    record about the reported content, independent of who filed it, so it
+    survives the reporter deleting their account with the reported content
+    reference and moderation state untouched.
     """
     photo_urls = [
         row.photo_url
@@ -55,7 +54,9 @@ def delete_my_account(
         db.delete(adventure)
 
     db.query(models.PhotoModeration).filter_by(user_id=user_id).delete()
-    db.query(models.ContentReport).filter_by(reporter_user_id=user_id).delete()
+    db.query(models.ContentReport).filter_by(reporter_user_id=user_id).update(
+        {"reporter_user_id": None}
+    )
 
     profile = db.get(models.UserProfile, user_id)
     if profile is not None:

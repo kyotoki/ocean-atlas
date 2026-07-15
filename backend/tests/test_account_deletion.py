@@ -77,10 +77,12 @@ def test_deletion_removes_everything_the_user_owns():
     dive_id = dive_resp.json()["id"]
 
     client.put("/profile/me", json={"first_name": "A", "last_name": "Diver"})
-    client.post(
+    report_resp = client.post(
         "/reports/",
-        json={"adventure_id": dive_id, "reason": "spam", "details": None},
+        json={"adventure_id": dive_id, "reason": "spam", "details": "looks staged"},
     )
+    assert report_resp.status_code == 201
+    report_id = report_resp.json()["id"]
 
     db = TestingSessionLocal()
     try:
@@ -88,7 +90,7 @@ def test_deletion_removes_everything_the_user_owns():
         assert db.query(models.AdventureSpecies).filter_by(adventure_id=dive_id).count() == 1
         assert db.query(models.PhotoModeration).filter_by(user_id="user_a").count() == 2
         assert db.get(models.UserProfile, "user_a") is not None
-        assert db.query(models.ContentReport).filter_by(reporter_user_id="user_a").count() == 1
+        assert db.get(models.ContentReport, report_id).reporter_user_id == "user_a"
     finally:
         db.close()
 
@@ -105,7 +107,17 @@ def test_deletion_removes_everything_the_user_owns():
         assert db.query(models.AdventureSpecies).filter_by(adventure_id=dive_id).count() == 0
         assert db.query(models.PhotoModeration).filter_by(user_id="user_a").count() == 0
         assert db.get(models.UserProfile, "user_a") is None
-        assert db.query(models.ContentReport).filter_by(reporter_user_id="user_a").count() == 0
+
+        # Anonymized, not deleted: the report itself, the content it points
+        # at, and its moderation state all survive the reporter's deletion -
+        # only the identifying link back to the (now-gone) reporter is gone.
+        report = db.get(models.ContentReport, report_id)
+        assert report is not None
+        assert report.reporter_user_id is None
+        assert report.adventure_id == dive_id
+        assert report.reason == "spam"
+        assert report.details == "looks staged"
+        assert report.status == "pending"
     finally:
         db.close()
 
@@ -150,7 +162,10 @@ def test_a_reported_adventure_belonging_to_someone_else_survives_the_reporters_d
     dive_id = create_dive(title="A's Dive").json()["id"]
 
     as_user("user_b")
-    client.post("/reports/", json={"adventure_id": dive_id, "reason": "spam", "details": None})
+    report_resp = client.post(
+        "/reports/", json={"adventure_id": dive_id, "reason": "spam", "details": None}
+    )
+    report_id = report_resp.json()["id"]
 
     fake_clerk = mock.Mock()
     with mock.patch.object(account_module, "Clerk", return_value=fake_clerk):
@@ -159,10 +174,17 @@ def test_a_reported_adventure_belonging_to_someone_else_survives_the_reporters_d
 
     db = TestingSessionLocal()
     try:
-        # user_b's report is gone (they were the reporter)...
+        # user_b's reporter link is anonymized (they deleted their account)...
         assert db.query(models.ContentReport).filter_by(reporter_user_id="user_b").count() == 0
-        # ...but the adventure they reported, which belongs to user_a
-        # (not user_b), is untouched.
+        # ...but the report itself survives, still pointing at the reported
+        # adventure - this is the actual safety-record behavior being tested
+        # here, not just that user_b's link is gone.
+        report = db.get(models.ContentReport, report_id)
+        assert report is not None
+        assert report.reporter_user_id is None
+        assert report.adventure_id == dive_id
+        # ...and the adventure they reported, which belongs to user_a (not
+        # user_b), is untouched.
         assert db.get(models.Adventure, dive_id) is not None
     finally:
         db.close()
