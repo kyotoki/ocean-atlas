@@ -11,6 +11,9 @@
     "lint": "expo lint",
     "test": "jest"
   },
+  "overrides": {
+    "@xmldom/xmldom": "^0.9.10"
+  },
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.31",
     "@expo/vector-icons": "~14.0.4",
@@ -18,11 +21,15 @@
     "@react-native-community/datetimepicker": "^8.2.0",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-navigation/native": "^7.0.14",
+    "@sentry/react-native": "~6.10.0",
     "expo": "~52.0.11",
+    "expo-application": "~6.0.2",
     "expo-asset": "~11.0.5",
     "expo-auth-session": "~6.0.3",
     "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.3",
+    "expo-device": "~7.0.3",
+    "expo-file-system": "~18.0.12",
     "expo-font": "~13.0.4",
     "expo-image-picker": "~16.0.6",
     "expo-linear-gradient": "~14.0.2",
@@ -37,6 +44,7 @@
     "expo-web-browser": "~14.0.2",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
+    "posthog-react-native": "^4.56.2",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-leaflet": "^4.2.1",

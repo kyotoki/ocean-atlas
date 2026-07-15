@@ -52,6 +52,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "d3a16dc1-94ce-4428-8197-6d465281e0b6"
+      }
+    },
+    "owner": "svelapp"
   }
 }

@@ -23,5 +23,8 @@ frontend/android/
 frontend/.env
 frontend/.env.local
 
+# Tooling caches (Cloudflare wrangler, etc.)
+.wrangler/
+
 # OS
 .DS_Store

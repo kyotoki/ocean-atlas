@@ -53,6 +53,7 @@ interface ProfileModalsProps {
   unitSystem: UnitSystem;
   onUnitSystemChange: (unitSystem: UnitSystem) => void;
   onLogOut: () => void;
+  onDeleteAccount: () => void;
   appVersion: string;
   isPro: boolean;
 
@@ -101,6 +102,7 @@ export default function ProfileModals({
   unitSystem,
   onUnitSystemChange,
   onLogOut,
+  onDeleteAccount,
   appVersion,
   isPro,
   isSvelProModalVisible,
@@ -163,6 +165,7 @@ export default function ProfileModals({
         onEditProfile={onEditProfile}
         onOpenSvelPro={onOpenSvelPro}
         onLogOut={onLogOut}
+        onDeleteAccount={onDeleteAccount}
         appVersion={appVersion}
       />
 

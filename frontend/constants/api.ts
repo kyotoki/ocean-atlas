@@ -28,6 +28,7 @@ export const ENDPOINTS = {
   statsByActivity: (activityType: string) =>
     `${API_BASE_URL}/stats/by-activity?activity_type=${activityType}`,
   profile: `${API_BASE_URL}/profile/me`,
+  account: `${API_BASE_URL}/account/me`,
   speciesNearby: (latitude: number, longitude: number, marineOnly: boolean) =>
     `${API_BASE_URL}/species/nearby?latitude=${latitude}&longitude=${longitude}&marine_only=${marineOnly}`,
 };

@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 import models
@@ -8,6 +8,7 @@ import schemas
 from auth import get_current_user_id
 from database import get_db
 from marine_weather import fetch_marine_conditions
+from rate_limit import limiter
 from storage import delete_photo
 
 router = APIRouter(prefix="/adventures", tags=["adventures"])
@@ -52,8 +53,13 @@ def get_adventure(
     return adventure
 
 
+# Stricter than the 120/minute global default - each creation calls the
+# external marine-weather API on top of a DB write, and creating dozens of
+# dives a minute isn't a real usage pattern for an actual diver.
 @router.post("/", response_model=schemas.Adventure, status_code=201)
+@limiter.limit("20/minute")
 def create_adventure(
+    request: Request,
     adventure: schemas.AdventureCreate,
     db: Session = Depends(get_db),
     user_id: str = Depends(get_current_user_id),

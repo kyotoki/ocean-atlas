@@ -3,6 +3,24 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActivityType } from "../types/adventure";
 import { QueueFullError } from "./errors";
 
+// KNOWN, ACCEPTED RISK: this queue is stored unencrypted (AsyncStorage is
+// plain key-value storage, no OS-level encryption) - unlike utils/tokenCache.ts
+// and utils/deviceStorage.ts, which use expo-secure-store (iOS Keychain/
+// Android Keystore) for the same kind of on-device persistence. That's not
+// an oversight here: expo-secure-store has a hard 2048-byte limit per value
+// (see node_modules/expo-secure-store/src/byteCounter.ts), and writeQueue()
+// below stores the *entire* queue (up to MAX_QUEUE_SIZE items, each with
+// free-text notes and photo URIs) as one JSON blob that routinely exceeds
+// that - a naive swap to SecureStore would silently start throwing on
+// write, trading "unencrypted" for "broken," which is worse. A real fix
+// needs either per-item SecureStore entries with enforced size limits, or
+// envelope encryption (a small AES key held in SecureStore, encrypting this
+// blob before it reaches AsyncStorage) - real new crypto plumbing, flagged
+// here as a deliberate follow-up rather than done as a rushed inline patch.
+// Exposure is limited to a compromised/rooted device reading this app's own
+// sandboxed storage; the data at risk is dive logs (location, date, notes),
+// not credentials.
+
 // A worst-case multi-day offline trip logging a dozen-plus dives a day is
 // still nowhere near this - it exists purely to stop the queue from growing
 // unbounded (with no age-based eviction) if something keeps items from ever

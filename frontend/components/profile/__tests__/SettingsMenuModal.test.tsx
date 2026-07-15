@@ -10,7 +10,6 @@ jest.mock("../../../utils/crossPlatformAlert", () => ({
   showAlert: jest.fn(),
 }));
 
-import { showAlert } from "../../../utils/crossPlatformAlert";
 import SettingsMenuModal from "../SettingsMenuModal";
 
 // react-native's jest preset already stubs Linking.openURL as a persistent
@@ -43,6 +42,7 @@ function renderMenu(overrides: Partial<React.ComponentProps<typeof SettingsMenuM
       onEditProfile={jest.fn()}
       onOpenSvelPro={jest.fn()}
       onLogOut={jest.fn()}
+      onDeleteAccount={jest.fn()}
       appVersion="1.2.3"
       {...overrides}
     />
@@ -118,15 +118,11 @@ test("tapping Log Out calls onLogOut directly (confirmation lives in the caller)
   expect(onLogOut).toHaveBeenCalled();
 });
 
-test("Delete Account shows a confirmation rather than deleting anything", () => {
-  renderMenu();
+test("tapping Delete Account calls onDeleteAccount directly (confirmation lives in the caller)", () => {
+  const onDeleteAccount = jest.fn();
+  renderMenu({ onDeleteAccount });
   fireEvent.press(screen.getByText("Delete Account"));
-
-  expect(showAlert).toHaveBeenCalledWith(
-    "Delete Account",
-    expect.stringContaining("isn't available"),
-    expect.any(Array)
-  );
+  expect(onDeleteAccount).toHaveBeenCalled();
 });
 
 test("Rate Svel opens the platform store URL", () => {

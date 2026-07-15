@@ -34,6 +34,11 @@ jest.mock("../../utils/api", () => ({
   useAuthedFetch: () => mockAuthedFetch,
 }));
 
+const mockShowAlert = jest.fn();
+jest.mock("../../utils/crossPlatformAlert", () => ({
+  showAlert: (...args: unknown[]) => mockShowAlert(...args),
+}));
+
 jest.mock("expo-secure-store", () => {
   const store = new Map<string, string>();
   return {
@@ -77,7 +82,17 @@ function okJson(data: unknown) {
 beforeEach(() => {
   mockAuthedFetch.mockReset();
   mockSignOut.mockReset();
+  mockShowAlert.mockReset();
 });
+
+// Grabs the destructive button from the last showAlert(...) call and invokes
+// it directly - mirroring how a real confirmation dialog's tap would fire
+// the same onPress, without needing a real native/web Alert to render.
+function confirmLastAlert() {
+  const buttons = mockShowAlert.mock.calls[mockShowAlert.mock.calls.length - 1][2];
+  const destructive = buttons.find((b: { style?: string }) => b.style === "destructive");
+  destructive.onPress();
+}
 
 describe("viewing stats", () => {
   test("fetches adventures and per-activity stats on focus", async () => {
@@ -155,6 +170,62 @@ describe("editing a profile", () => {
     });
     await waitFor(() =>
       expect(result.current.localProfile.certifications).not.toContain("PADI Open Water")
+    );
+  });
+});
+
+describe("deleting an account", () => {
+  test("confirming calls DELETE /account/me and signs out on success", async () => {
+    mockAuthedFetch
+      .mockResolvedValueOnce(okJson(ADVENTURES)) // adventures
+      .mockResolvedValueOnce(okJson(SCUBA_STATS))
+      .mockResolvedValueOnce(okJson(SNORKEL_STATS))
+      .mockResolvedValueOnce(okJson(FREEDIVING_STATS))
+      .mockResolvedValueOnce({ ok: true, status: 204 }); // the deletion call itself
+    const { result } = renderHook(() => useProfileData());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      result.current.handleDeleteAccount();
+    });
+    expect(mockShowAlert).toHaveBeenCalledWith(
+      "Delete Account",
+      expect.stringContaining("cannot be undone"),
+      expect.any(Array)
+    );
+
+    await act(async () => {
+      confirmLastAlert();
+    });
+
+    const [url, init] = mockAuthedFetch.mock.calls[mockAuthedFetch.mock.calls.length - 1];
+    expect(url).toContain("/account/me");
+    expect(init).toEqual(expect.objectContaining({ method: "DELETE" }));
+    expect(mockSignOut).toHaveBeenCalled();
+  });
+
+  test("does not sign out if the deletion request fails", async () => {
+    mockAuthedFetch
+      .mockResolvedValueOnce(okJson(ADVENTURES))
+      .mockResolvedValueOnce(okJson(SCUBA_STATS))
+      .mockResolvedValueOnce(okJson(SNORKEL_STATS))
+      .mockResolvedValueOnce(okJson(FREEDIVING_STATS))
+      .mockResolvedValueOnce({ ok: false, status: 502 });
+    const { result } = renderHook(() => useProfileData());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      result.current.handleDeleteAccount();
+    });
+    await act(async () => {
+      confirmLastAlert();
+    });
+
+    expect(mockSignOut).not.toHaveBeenCalled();
+    // Once for the initial "are you sure" confirmation, once for the failure.
+    expect(mockShowAlert).toHaveBeenCalledWith(
+      "Unable to delete account",
+      expect.any(String)
     );
   });
 });

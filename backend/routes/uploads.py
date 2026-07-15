@@ -10,6 +10,7 @@ import models
 from auth import get_current_user_id
 from database import get_db
 from moderation import ModerationUnavailableError, check_image_for_nudity
+from rate_limit import limiter
 from storage import ALLOWED_CONTENT_TYPES, MAX_UPLOAD_BYTES, save_photo
 
 register_heif_opener()
@@ -19,7 +20,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 
+# Stricter than the 120/minute global default - each upload triggers a
+# Sightengine moderation call (free tier: 2,000 ops/month total) and an R2
+# write, so the generous global default would let one abusive IP burn the
+# entire monthly moderation quota in minutes. 10/minute is still well above
+# any real user's actual upload cadence.
 @router.post("/", status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def upload_photo(
     request: Request,
     file: UploadFile,

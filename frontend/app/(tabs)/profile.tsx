@@ -156,6 +156,7 @@ export default function ProfileScreen() {
         unitSystem={profile.unitSystem}
         onUnitSystemChange={profile.setUnitSystem}
         onLogOut={profile.handleLogOut}
+        onDeleteAccount={profile.handleDeleteAccount}
         appVersion={profile.appVersion}
         isPro={profile.isPro}
         isSvelProModalVisible={profile.isSvelProModalVisible}

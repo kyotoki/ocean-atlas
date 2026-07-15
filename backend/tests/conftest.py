@@ -16,6 +16,16 @@ from auth import get_current_user_id  # noqa: E402
 from database import Base, get_db  # noqa: E402
 from main import app  # noqa: E402
 from moderation import ModerationResult  # noqa: E402
+from rate_limit import limiter  # noqa: E402
+
+# Per-route rate limits (routes/uploads.py, routes/adventures.py) key on
+# remote address - every TestClient request looks like it comes from the
+# same address, so the whole test suite would otherwise share one rate-limit
+# bucket and start failing with 429s partway through a run, independent of
+# which test happens to run first. Rate limiting itself isn't what these
+# tests are testing, so it's disabled here rather than made test-aware -
+# production (main.py, never imports conftest) is unaffected.
+limiter.enabled = False
 
 DEFAULT_TEST_MARINE_CONDITIONS = {
     "water_temp_c": 24.5,

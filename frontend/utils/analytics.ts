@@ -1,3 +1,5 @@
+import PostHog from "posthog-react-native";
+
 import { readJSON, writeJSON } from "./deviceStorage";
 
 export interface AnalyticsProperties {
@@ -9,10 +11,10 @@ interface AnalyticsClient {
 }
 
 // Every call site below imports `track`/`AnalyticsEvents` from this file,
-// never a specific provider - logs to the console in dev and does nothing in
-// production. There's no live PostHog project to send these to yet (that's
-// planned for Month 4); this stub exists so events get instrumented at their
-// real call sites now instead of being bolted on later.
+// never a specific provider - logs to the console in dev, and additionally
+// sends to PostHog whenever EXPO_PUBLIC_POSTHOG_KEY is set (unset locally on
+// purpose, same as EXPO_PUBLIC_SENTRY_DSN - real values come from eas.json
+// build profiles, not local .env).
 const consoleClient: AnalyticsClient = {
   track(event, properties) {
     if (__DEV__) {
@@ -22,10 +24,25 @@ const consoleClient: AnalyticsClient = {
   },
 };
 
-// The one line that changes in Month 4: swap this assignment for a real
-// PostHog-backed client that satisfies the same AnalyticsClient interface
-// (a `track(event, properties)` method) - no call site below needs to change.
-const client: AnalyticsClient = consoleClient;
+const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_KEY;
+
+// One PostHog project total (not one per backend environment) - events are
+// tagged with `environment` below so staging/production stay distinguishable
+// within that single project, the same split Sentry uses.
+const posthog: PostHog | null = posthogApiKey
+  ? new PostHog(posthogApiKey, {
+      host: "https://us.i.posthog.com",
+    })
+  : null;
+
+const environment = process.env.EXPO_PUBLIC_SENTRY_ENVIRONMENT ?? "development";
+
+const client: AnalyticsClient = {
+  track(event, properties) {
+    consoleClient.track(event, properties);
+    posthog?.capture(event, { ...properties, environment });
+  },
+};
 
 export const AnalyticsEvents = {
   AppOpened: "app_opened",

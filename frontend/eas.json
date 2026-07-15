@@ -1,0 +1,40 @@
+{
+  "cli": {
+    "version": ">= 13.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://localhost:8000",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_Zmxvd2luZy1nYXJmaXNoLTg3LmNsZXJrLmFjY291bnRzLmRldiQ",
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "development"
+      }
+    },
+    "staging": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api-staging.svel.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_Zmxvd2luZy1nYXJmaXNoLTg3LmNsZXJrLmFjY291bnRzLmRldiQ",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://dd74323e734c00ac3760280a8d7072de@o4511736046747648.ingest.us.sentry.io/4511736254889984",
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "staging",
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_vLbyeDDfK6pypvdhk5BgBp3YhZzHDQo8RkZs3wDBurXq"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.svel.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuc3ZlbC5hcHAk",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://dd74323e734c00ac3760280a8d7072de@o4511736046747648.ingest.us.sentry.io/4511736254889984",
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "production",
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_vLbyeDDfK6pypvdhk5BgBp3YhZzHDQo8RkZs3wDBurXq"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

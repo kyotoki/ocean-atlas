@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import OceanLoadingScreen from "../components/auth/OceanLoadingScreen";
 import { PreferencesProvider } from "../contexts/PreferencesContext";
 import { AnalyticsEvents, track } from "../utils/analytics";
+import { initSentry, Sentry } from "../utils/sentry";
 import { tokenCache } from "../utils/tokenCache";
 
 // Must run once at module scope, before any OAuth flow starts (social
@@ -16,6 +17,10 @@ import { tokenCache } from "../utils/tokenCache";
 // leaving the browser tab open waiting.
 WebBrowser.maybeCompleteAuthSession();
 
+// Also module scope, so errors during app startup itself (before the root
+// component ever renders) are still captured.
+initSentry();
+
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 if (!publishableKey) {
@@ -24,7 +29,9 @@ if (!publishableKey) {
   );
 }
 
-export default function RootLayout() {
+export default Sentry.wrap(RootLayout);
+
+function RootLayout() {
   // Fires once per cold start of the root layout - the simplest faithful
   // reading of "app opened" as a retention event, independent of whether the
   // user is signed in yet (auth state itself is a separate concern).

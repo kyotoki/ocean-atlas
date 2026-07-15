@@ -288,6 +288,47 @@ export function useProfileData() {
     ]);
   };
 
+  const handleDeleteAccount = () => {
+    showAlert(
+      "Delete Account",
+      "This permanently deletes your account and everything in it - every logged adventure, photo, and your profile. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete Account",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const response = await authedFetch(ENDPOINTS.account, { method: "DELETE" });
+              if (!response.ok && response.status !== 204) {
+                throw new Error(`Server responded with status ${response.status}`);
+              }
+              // Only reached on confirmed success - deliberately not signing
+              // out on failure (see routes/account.py's delete_my_account
+              // docstring: a 502 there means local data is already gone but
+              // the Clerk account isn't, which is exactly the "contact
+              // support" case its own error message points at, not a state
+              // to silently treat as done).
+              setIsSettingsMenuVisible(false);
+              setLocalProfile(DEFAULT_LOCAL_PROFILE);
+              setIsProfileLoaded(false);
+              setAdventures([]);
+              setScubaStats(null);
+              setSnorkelingStats(null);
+              setFreedivingStats(null);
+              signOut();
+            } catch (err) {
+              showAlert(
+                "Unable to delete account",
+                err instanceof Error ? err.message : "Check that the Svel server is running."
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const openEditProfile = () => {
     setIsSettingsMenuVisible(false);
     setIsEditProfileVisible(true);
@@ -381,6 +422,7 @@ export function useProfileData() {
     handleDeleteAdventure,
     handleAvatarPress,
     handleLogOut,
+    handleDeleteAccount,
     openEditProfile,
     openGearManager,
     openPrivacyControls,

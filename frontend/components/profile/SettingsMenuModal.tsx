@@ -30,6 +30,7 @@ interface SettingsMenuModalProps {
   onEditProfile: () => void;
   onOpenSvelPro: () => void;
   onLogOut: () => void;
+  onDeleteAccount: () => void;
   appVersion: string;
 }
 
@@ -39,6 +40,7 @@ export default function SettingsMenuModal({
   onEditProfile,
   onOpenSvelPro,
   onLogOut,
+  onDeleteAccount,
   appVersion,
 }: SettingsMenuModalProps) {
   const translateX = useRef(new Animated.Value(SCREEN_WIDTH)).current;
@@ -73,20 +75,6 @@ export default function SettingsMenuModal({
       // The native share sheet being dismissed/cancelled also rejects on
       // some platforms - nothing to surface to the user either way.
     });
-  };
-
-  const handleDeleteAccount = () => {
-    // Account deletion has no backend support yet (no endpoint, no Clerk
-    // account removal wired up) - this is a real, working row that's honest
-    // about that rather than a dead end, not a fake "deleted!" confirmation.
-    showAlert(
-      "Delete Account",
-      "Account deletion isn't available in the app yet. Contact us and we'll take care of it for you.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Contact Us", onPress: () => setFeedbackSource("contact") },
-      ]
-    );
   };
 
   return (
@@ -146,7 +134,7 @@ export default function SettingsMenuModal({
             />
 
             <View style={styles.dangerZone}>
-              <SettingsRow icon="trash-outline" label="Delete Account" destructive onPress={handleDeleteAccount} />
+              <SettingsRow icon="trash-outline" label="Delete Account" destructive onPress={onDeleteAccount} />
             </View>
           </ScrollView>
         </Pressable>
